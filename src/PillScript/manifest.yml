@@ -2,7 +2,7 @@
 name: PillScript
 version: 0.1.0
 authors:
-  - AUTHOR_NAME
+  - Mateusz Zwierzycki
 description: >
   A C# script component for Grasshopper in Rhino 8, with the editor the built-in one does not have.
 
@@ -15,6 +15,7 @@ description: >
   solve and show the locals, with Rhino still responsive.
 
   Windows only, and it needs the WebView2 runtime, which Rhino 8 already installs.
+email: hi@object.pl
 url: https://github.com/theObjectCo/PillScript
 icon: icon.png
 keywords:

@@ -16,8 +16,8 @@ namespace PillScript
 
         public override Guid Id => new Guid("2B6E9D44-31A7-4C2F-8E77-5A0C9B3F1D22");
 
-        public override string AuthorName => string.Empty;
+        public override string AuthorName => "Mateusz Zwierzycki";
 
-        public override string AuthorContact => string.Empty;
+        public override string AuthorContact => "hi@object.pl";
     }
 }
