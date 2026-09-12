@@ -1,5 +1,5 @@
 // Dark Modern, the theme Visual Studio Code ships as its dark default, transcribed for Monaco.
-// Workbench colours live in style.css; this file covers the editor surface and the token colours.
+// Workbench colours live in css/; this file covers the editor surface and the token colours.
 
 window.defineDarkModern = function (monaco) {
   monaco.editor.defineTheme('dark-modern', {

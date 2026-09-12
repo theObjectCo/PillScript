@@ -149,6 +149,38 @@ The port is loopback only and has no authentication, which is the same posture a
 anything able to run code on the machine can already do more than this allows. Set
 `SHARPSCRIPT_BRIDGE=off` to keep the port shut, or `SHARPSCRIPT_BRIDGE_PORT` to move it.
 
+## How the code is laid out
+
+Three layers, and no file over about three hundred lines.
+
+`src/SharpScript/Scripting` is the model, and knows nothing about windows. A `ScriptProject` holds
+the files and mirrors them to a folder; `ScriptProject.Disk.cs` is that mirror and
+`ProjectTemplates` is what a new script starts as. `PackageResolver` turns what the csproj
+references into assembly paths, with `DotnetSdk` running the SDK and `RestoreAssets` reading what
+restore left behind. `ScriptCompiler`, `ScriptSignature`, `ScriptRunner` and `ScriptLoadContext`
+build and run; `ScriptLanguageService` answers the editor between builds, formatting its answers
+through `LanguageFormats`.
+
+`src/SharpScript/Editor` is the view and the view model. `EditorViewModel` is everything the
+editor can do to a component, written without a single UI type. `EditorBridge` carries messages
+and decides which half each belongs to, `EditorPayloads` holds the wire format and `EditorRequest`
+parses what arrives. `ScriptEditorWindow` is left with what only a window can do, leaning on
+`WindowFrame` for moving and resizing, `DockHost` for living inside Grasshopper and
+`CanvasNavigator` for driving the canvas.
+
+The page under `Editor/web` is plain modules, no build step: `app/state.js` holds what they share,
+`app/bridge.js` is the only thing that talks to WebView2, and the rest take a part of the window
+each. `index.html` lists them in load order. The stylesheet is split the same way under `css/`.
+
+`src/SharpScript/Components` is the Grasshopper surface, and `src/SharpScript/Bridge` is the
+loopback endpoint an agent reaches.
+
+## Third-party code
+
+The `src/SharpScript/Editor/web/vs` folder is the Monaco Editor 0.56.0, redistributed unchanged
+under the MIT licence, with the notice kept alongside it in that folder. Rhino, Grasshopper and
+Roslyn arrive as NuGet packages and are not redistributed here.
+
 ## Known gaps
 
 - There is no terminal. One was built and taken out again: as a process with redirected streams it

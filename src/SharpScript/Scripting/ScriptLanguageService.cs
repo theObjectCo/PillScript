@@ -14,24 +14,6 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace SharpScript.Scripting
 {
-    internal sealed class CompletionEntry
-    {
-        public string Label;
-        public string Kind;
-        public string Detail;
-        public string Insert;
-        public string Sort;
-        public string Filter;
-        public int Index;
-    }
-
-    internal sealed class SignatureEntry
-    {
-        public string Label;
-        public string Documentation;
-        public List<string> Parameters = new List<string>();
-    }
-
     /// <summary>
     /// A Roslyn workspace over one component's sources, answering the questions an editor asks
     /// between compiles: what can be typed here, what is this, what are the arguments, and what is
@@ -82,6 +64,8 @@ namespace SharpScript.Scripting
             }
         }
 
+        // ----- what the editor asks --------------------------------------------------------------
+
         public async Task<List<CompletionEntry>> CompleteAsync(
             string file, string text, int offset, string trigger)
         {
@@ -90,7 +74,9 @@ namespace SharpScript.Scripting
                 var service = CompletionService.GetService(document);
                 if (service == null) return new List<CompletionEntry>();
 
-                var completions = await service.GetCompletionsAsync(document, offset, Trigger(trigger));
+                var completions = await service.GetCompletionsAsync(
+                    document, offset, LanguageFormats.Trigger(trigger));
+
                 if (completions == null) return new List<CompletionEntry>();
 
                 var entries = new List<CompletionEntry>();
@@ -101,7 +87,7 @@ namespace SharpScript.Scripting
                     entries.Add(new CompletionEntry
                     {
                         Label = item.DisplayText,
-                        Kind = Kind(item.Tags),
+                        Kind = LanguageFormats.Kind(item.Tags),
                         Detail = item.InlineDescription,
                         Insert = item.DisplayText,
                         Sort = item.SortText,
@@ -125,7 +111,9 @@ namespace SharpScript.Scripting
                 var service = CompletionService.GetService(document);
                 if (service == null) return string.Empty;
 
-                var completions = await service.GetCompletionsAsync(document, offset, Trigger(trigger));
+                var completions = await service.GetCompletionsAsync(
+                    document, offset, LanguageFormats.Trigger(trigger));
+
                 if (completions == null || index < 0 || index >= completions.ItemsList.Count)
                     return string.Empty;
 
@@ -156,7 +144,10 @@ namespace SharpScript.Scripting
                 var info = await service.GetQuickInfoAsync(document, offset);
                 if (info == null) return string.Empty;
 
-                var parts = info.Sections.Select(section => section.Text).Where(t => !string.IsNullOrWhiteSpace(t));
+                var parts = info.Sections
+                    .Select(section => section.Text)
+                    .Where(t => !string.IsNullOrWhiteSpace(t));
+
                 return string.Join(Environment.NewLine + Environment.NewLine, parts);
             }, string.Empty);
         }
@@ -170,7 +161,7 @@ namespace SharpScript.Scripting
 
                 return model.GetDiagnostics()
                     .Where(d => d.Severity != DiagnosticSeverity.Hidden)
-                    .Select(Describe)
+                    .Select(LanguageFormats.Describe)
                     .ToList();
             }, new List<CompileDiagnostic>());
         }
@@ -196,8 +187,7 @@ namespace SharpScript.Scripting
                 if (arguments == null || !arguments.Span.Contains(Math.Max(0, offset - 1)))
                     return empty;
 
-                var call = arguments.Parent;
-                var info = model.GetSymbolInfo(call);
+                var info = model.GetSymbolInfo(arguments.Parent);
 
                 var candidates = info.Symbol != null
                     ? ImmutableArray.Create(info.Symbol)
@@ -212,10 +202,10 @@ namespace SharpScript.Scripting
 
                 var signatures = methods.Select(method => new SignatureEntry
                 {
-                    Label = method.ToDisplayString(SignatureFormat),
-                    Documentation = Summary(method),
+                    Label = method.ToDisplayString(LanguageFormats.Signature),
+                    Documentation = LanguageFormats.Summary(method),
                     Parameters = method.Parameters
-                        .Select(p => p.ToDisplayString(ParameterFormat))
+                        .Select(p => p.ToDisplayString(LanguageFormats.Parameter))
                         .ToList()
                 }).ToList();
 
@@ -223,7 +213,7 @@ namespace SharpScript.Scripting
             }, (new List<SignatureEntry>(), 0));
         }
 
-        // ----- workspace -----------------------------------------------------------------------
+        // ----- the workspace ---------------------------------------------------------------------
 
         /// <summary>
         /// Applies the editor's current text to the document and runs a query on it. Requests are
@@ -287,105 +277,13 @@ namespace SharpScript.Scripting
 
             _workspace.AddProject(project);
 
-            foreach (var file in _project.SourceFiles)
-                Add(file.Name, file.Content);
+            foreach (var file in _project.SourceFiles) Add(file.Name, file.Content);
         }
 
         void Add(string name, string content)
         {
             var document = _workspace.AddDocument(_projectId, name, SourceText.From(content ?? string.Empty));
             _documents[name] = document.Id;
-        }
-
-        // ----- formatting ----------------------------------------------------------------------
-
-        static CompletionTrigger Trigger(string trigger)
-            => string.IsNullOrEmpty(trigger)
-                ? CompletionTrigger.Invoke
-                : CompletionTrigger.CreateInsertionTrigger(trigger[0]);
-
-        static CompileDiagnostic Describe(Diagnostic diagnostic)
-        {
-            var span = diagnostic.Location.GetLineSpan();
-
-            return new CompileDiagnostic
-            {
-                File = span.Path ?? string.Empty,
-                Line = span.StartLinePosition.Line + 1,
-                Column = span.StartLinePosition.Character + 1,
-                EndLine = span.EndLinePosition.Line + 1,
-                EndColumn = span.EndLinePosition.Character + 1,
-                Severity = diagnostic.Severity == DiagnosticSeverity.Error ? "error" : "warning",
-                Id = diagnostic.Id,
-                Message = diagnostic.GetMessage()
-            };
-        }
-
-        static string Summary(ISymbol symbol)
-        {
-            var xml = symbol.GetDocumentationCommentXml();
-            if (string.IsNullOrWhiteSpace(xml)) return string.Empty;
-
-            var start = xml.IndexOf("<summary>", StringComparison.Ordinal);
-            var end = xml.IndexOf("</summary>", StringComparison.Ordinal);
-            if (start < 0 || end < start) return string.Empty;
-
-            start += "<summary>".Length;
-            return string.Join(" ", xml.Substring(start, end - start)
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(line => line.Trim()));
-        }
-
-        static readonly SymbolDisplayFormat SignatureFormat = new SymbolDisplayFormat(
-            globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
-            genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-            memberOptions: SymbolDisplayMemberOptions.IncludeParameters
-                           | SymbolDisplayMemberOptions.IncludeType,
-            parameterOptions: SymbolDisplayParameterOptions.IncludeType
-                              | SymbolDisplayParameterOptions.IncludeName
-                              | SymbolDisplayParameterOptions.IncludeParamsRefOut
-                              | SymbolDisplayParameterOptions.IncludeDefaultValue,
-            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
-        static readonly SymbolDisplayFormat ParameterFormat = new SymbolDisplayFormat(
-            parameterOptions: SymbolDisplayParameterOptions.IncludeType
-                              | SymbolDisplayParameterOptions.IncludeName
-                              | SymbolDisplayParameterOptions.IncludeParamsRefOut
-                              | SymbolDisplayParameterOptions.IncludeDefaultValue,
-            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
-        /// <summary>Maps Roslyn's tags onto the names Monaco uses for completion icons.</summary>
-        static string Kind(ImmutableArray<string> tags)
-        {
-            foreach (var tag in tags)
-            {
-                switch (tag)
-                {
-                    case "Class": return "Class";
-                    case "Structure": return "Struct";
-                    case "Interface": return "Interface";
-                    case "Enum": return "Enum";
-                    case "EnumMember": return "EnumMember";
-                    case "Delegate": return "Function";
-                    case "Method":
-                    case "ExtensionMethod": return "Method";
-                    case "Property": return "Property";
-                    case "Field": return "Field";
-                    case "Event": return "Event";
-                    case "Namespace": return "Module";
-                    case "Keyword": return "Keyword";
-                    case "Local":
-                    case "Parameter":
-                    case "RangeVariable": return "Variable";
-                    case "Constant": return "Constant";
-                    case "TypeParameter": return "TypeParameter";
-                    case "Snippet": return "Snippet";
-                    case "Operator": return "Operator";
-                }
-            }
-
-            return "Text";
         }
 
         public void Dispose()

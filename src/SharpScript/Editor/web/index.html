@@ -6,7 +6,12 @@
         content="default-src 'self' https://sharpscript.local; script-src 'self' https://sharpscript.local 'unsafe-eval'; style-src 'self' https://sharpscript.local 'unsafe-inline'; font-src 'self' https://sharpscript.local data:; worker-src 'self' blob:;" />
   <title>C# Script</title>
   <link rel="stylesheet" href="vs/editor/editor.main.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/shell.css" />
+  <link rel="stylesheet" href="css/panel.css" />
+  <link rel="stylesheet" href="css/status.css" />
+  <link rel="stylesheet" href="css/window.css" />
+  <link rel="stylesheet" href="css/references.css" />
 </head>
 <body>
 <svg width="0" height="0" style="position: absolute; overflow: hidden;" aria-hidden="true">
@@ -143,11 +148,6 @@
     <main id="main">
 
       <div id="toolbar">
-        <button id="compile" class="primary"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><use href="#icBuild"></use></svg>Compile</button>
-        <button id="run" class="secondary"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><use href="#icRun"></use></svg>Run</button>
-
-        <div class="toolbar-divider"></div>
-
         <button id="breakpoints" class="icon breakpoint" title="Remove all breakpoints"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"><use href="#icBreak"></use></svg></button>
         <button id="breakpoints-toggle" class="icon" title="Disable all breakpoints"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4"><use href="#icBreakOff"></use></svg></button>
         <button id="inspect" class="icon" title="Inspect variables"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round"><use href="#icInspect"></use></svg></button>
@@ -163,7 +163,9 @@
         </div>
 
         <div class="grow"></div>
-        <div class="runtime"><span id="runtime-dot" class="dot"></span><span id="runtime">net7.0 · Roslyn</span></div>
+
+        <button id="compile" class="primary"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><use href="#icBuild"></use></svg>Compile</button>
+        <button id="run" class="secondary"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><use href="#icRun"></use></svg>Run</button>
       </div>
 
       <div id="editor"></div>
@@ -199,6 +201,7 @@
           <button id="menu-toggle" class="menu-item">Disable all breakpoints</button>
           <button id="menu-remove" class="menu-item">Remove all breakpoints</button>
         </div>
+        <span id="runtime" class="status-item">net7.0 · Roslyn</span>
         <span class="status-item">C# 11</span>
       </footer>
     </main>
@@ -256,6 +259,16 @@
 <script src="csharp.js"></script>
 <script src="sample.js"></script>
 <script src="probe.js"></script>
-<script src="app.js"></script>
+<script src="app/state.js"></script>
+<script src="app/bridge.js"></script>
+<script src="app/layout.js"></script>
+<script src="app/panel.js"></script>
+<script src="app/breakpoints.js"></script>
+<script src="app/language.js"></script>
+<script src="app/files.js"></script>
+<script src="app/references.js"></script>
+<script src="app/nuget.js"></script>
+<script src="app/status.js"></script>
+<script src="app/main.js"></script>
 </body>
 </html>

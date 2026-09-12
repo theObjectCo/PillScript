@@ -1,0 +1,98 @@
+/* The pane along the bottom, and the three views inside it. */
+
+/* ----- panel ----- */
+
+#panel {
+  flex: none;
+  height: 212px;
+  display: flex;
+  flex-direction: column;
+  background: var(--chrome);
+  border-top: 1px solid var(--border);
+}
+
+.tabs {
+  height: 34px;
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  font-family: var(--code-font);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8a8c95;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover { color: var(--fg); }
+.tab.on { color: #f2f0ea; border-bottom-color: var(--accent); }
+
+.badge { background: var(--badge-bg); color: var(--badge-fg); border-radius: 8px; padding: 1px 6px; font-size: 10px; }
+.badge.error { background: var(--error); color: #ffffff; }
+
+.link { font-family: var(--code-font); font-size: 11px; color: var(--fg-faint); padding: 0 6px; }
+.link:hover { color: var(--fg-bright); }
+.link.on { color: var(--fg-bright); }
+
+.panel-body { flex: 1; min-height: 0; position: relative; }
+
+.view {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow: auto;
+  font-family: var(--code-font);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.view.on { display: block; }
+.view.log, .view.problems, .view.variables { padding: 10px 16px; }
+
+.log .line { display: flex; gap: 12px; }
+.log .time { color: #55575f; flex: none; }
+
+/* A flex item will not wrap until it is allowed to be narrower than its content, which is what
+   min-width does here. Without it the line pushes sideways and the Wrap button looks broken. */
+.log .text {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-dim);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#panel.nowrap .log .text { white-space: pre; overflow-wrap: normal; }
+.log .text.ok { color: var(--ok); }
+.log .text.warn { color: var(--warning); }
+.log .text.bad { color: var(--error); }
+.log .text.loud { color: var(--fg-bright); }
+
+.problems { list-style: none; margin: 0; }
+.problems li { display: flex; gap: 10px; align-items: flex-start; padding: 3px 0; cursor: pointer; }
+.problems li:hover { background: #1f1f1f; }
+.problems .mark { flex: none; margin-top: 3px; }
+.problems li.error .mark { color: var(--error); }
+.problems li.warning .mark { color: var(--warning); }
+.problems .message { color: var(--fg); overflow-wrap: anywhere; }
+.problems li > div { min-width: 0; }
+#panel.nowrap .problems .message { white-space: pre; overflow-wrap: normal; }
+.problems .where { color: var(--fg-faint); font-size: 11px; }
+.problems .none { color: #55575f; padding: 3px 0; }
+
+.variables .frame { color: var(--fg-faint); padding-bottom: 6px; }
+.variables .row { display: flex; gap: 12px; padding: 2px 0; }
+.variables .name { color: #9cdcfe; min-width: 140px; }
+.variables .value { color: var(--fg); white-space: pre-wrap; }
+.variables .type { color: #62c7b0; }
+.variables .none { color: #55575f; }

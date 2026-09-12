@@ -1,0 +1,61 @@
+/* Dark Modern, the theme Visual Studio Code ships as its dark default, applied to the whole
+   window rather than only to the code. Workbench colours here, token colours in theme.js. */
+
+:root {
+  --editor: #1f1f1f;
+  --chrome: #181818;
+  --elevated: #202020;
+  --border: #2b2b2b;
+  --border-strong: #313131;
+
+  --fg: #cccccc;
+  --fg-dim: #9d9d9d;
+  --fg-faint: #6e7681;
+  --fg-bright: #e7e7e7;
+
+  --accent: #0078d4;
+  --accent-hover: #026ec1;
+  --selected: #04395e;
+  --hover: #2a2d2e;
+
+  --error: #f14c4c;
+  --warning: #cca700;
+  --ok: #89d185;
+
+  --badge-bg: #616161;
+  --badge-fg: #f8f8f8;
+  --secondary: #313131;
+  --secondary-hover: #3c3c3c;
+
+  --ui-font: "Segoe WPC", "Segoe UI", system-ui, sans-serif;
+  --code-font: "Cascadia Mono", Consolas, "Courier New", monospace;
+
+  --rail: 44px;
+  --sidebar: 252px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--editor);
+  color: var(--fg);
+  font: 13px var(--ui-font);
+  user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.grow { flex: 1; }
+.hidden { display: none !important; }
+
+#shell { display: flex; flex-direction: column; height: 100%; }

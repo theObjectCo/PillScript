@@ -1,0 +1,235 @@
+/* ----- the references window -----
+
+   Three groups, weighted by how much attention each deserves. Packages come first and lead with
+   a search field, because looking one up is the common errand. Assemblies come second, with the
+   path on its own line so it stops competing with the name. What Rhino provides is folded away:
+   it is context, not something to act on. */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-box {
+  width: 660px;
+  max-width: 92%;
+  max-height: 82%;
+  display: flex;
+  flex-direction: column;
+  background: var(--elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.6);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--fg-bright);
+}
+
+.modal-head .ghost { font-size: 17px; line-height: 1; }
+
+.modal-body { padding: 4px 18px 18px; overflow: auto; }
+
+.ref-group { padding-top: 18px; }
+
+.ref-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-family: var(--code-font);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7a7c85;
+}
+
+.ref-heading .link { margin-left: auto; }
+.count { color: #55575f; letter-spacing: 0.08em; }
+.count::before { content: "· "; }
+
+/* ----- search ----- */
+
+.ref-search { position: relative; display: flex; align-items: center; gap: 8px; }
+
+.ref-search > svg {
+  position: absolute;
+  left: 9px;
+  color: var(--fg-faint);
+  pointer-events: none;
+}
+
+.ref-search input {
+  flex: 1;
+  min-width: 0;
+  font: 12px var(--code-font);
+  color: var(--fg);
+  background: var(--secondary);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 6px 9px 6px 29px;
+  outline: none;
+}
+
+.ref-search input:focus { border-color: var(--accent); }
+.ref-search input::placeholder { color: var(--fg-faint); }
+
+/* Results hang under the field instead of pushing the lists about. */
+.ref-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 268px;
+  overflow: auto;
+  background: #202020;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+}
+
+.ref-results li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--code-font);
+  font-size: 12px;
+}
+
+.ref-results li:hover { background: var(--selected); }
+.ref-results .id { color: var(--fg-bright); flex: none; }
+.ref-results .version { color: #62c7b0; flex: none; }
+
+.ref-results .blurb {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ref-results li.literal { color: var(--fg-dim); font-style: italic; }
+
+/* ----- the lists ----- */
+
+.ref-list { list-style: none; margin: 8px 0 0; padding: 0; font-family: var(--code-font); font-size: 12px; }
+
+.ref-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+
+.ref-list li:hover { background: #1f1f1f; }
+
+.ref-list .name { color: var(--fg); }
+.ref-list .grow { flex: 1; }
+
+.ref-list .path {
+  display: block;
+  padding: 0 8px 6px 8px;
+  color: var(--fg-faint);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+.ref-list .path:hover { color: var(--fg-dim); }
+.ref-list .path.bad { color: var(--error); direction: ltr; }
+
+.ref-list .entry { display: block; padding: 0; border-radius: 3px; }
+.ref-list .entry:hover { background: #1f1f1f; }
+.ref-list .entry:hover li, .ref-list .entry li:hover { background: transparent; }
+
+.ref-list .drop {
+  color: transparent;
+  flex: none;
+  padding: 0 2px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ref-list li:hover .drop, .ref-list .entry:hover .drop { color: var(--fg-faint); }
+.ref-list .drop:hover { color: var(--error); }
+
+.ref-list .none { color: var(--fg-faint); font-style: italic; }
+
+.ref-list select {
+  font: 12px var(--code-font);
+  color: #62c7b0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 1px 4px;
+  outline: none;
+}
+
+.ref-list li:hover select, .ref-list select:focus { border-color: var(--border-strong); background: var(--secondary); }
+.ref-list select:focus { border-color: var(--accent); }
+
+/* ----- what Rhino provides ----- */
+
+.ref-disclosure {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--code-font);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7a7c85;
+}
+
+.ref-disclosure:hover { color: var(--fg-dim); }
+.ref-disclosure .chevron { display: inline-block; transition: transform 0.12s; }
+.ref-disclosure.open .chevron { transform: rotate(90deg); }
+
+.ref-host {
+  padding: 8px 8px 0;
+  font-family: var(--code-font);
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--fg-faint);
+}
+
+/* ----- footer ----- */
+
+.modal-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-foot .link { margin-left: 0; }
+.modal-foot #ref-restore { margin-left: auto; }
+
+.note { font-size: 11px; color: var(--fg-faint); }
+.note.bad { color: var(--error); }
+.note.good { color: var(--ok); }

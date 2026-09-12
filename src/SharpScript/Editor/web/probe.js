@@ -1,6 +1,6 @@
 // Stands in for the component when index.html is opened with ?probe=1, so the editor's Monaco
-// wiring can be exercised in a browser. Loaded before app.js, which then talks to this instead
-// of to WebView2. Nothing here runs when the component hosts the page.
+// wiring can be exercised in a browser. Loaded before the app modules, which then talk to this
+// instead of to WebView2. Nothing here runs when the component hosts the page.
 
 (function () {
   if (location.search.indexOf('probe') < 0) return;

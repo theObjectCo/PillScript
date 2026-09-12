@@ -1,0 +1,85 @@
+/* The window itself: docked into Grasshopper, its scrollbars, the edges it is resized by and
+   the splitters between its panes. */
+
+/* ----- docked into the Grasshopper window ----- */
+
+.splitter {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 30;
+}
+
+.splitter:hover, .splitter.dragging { background: var(--accent); }
+
+/* Docked there is no window to move or resize, and the title bar is the first thing worth
+   giving back to the code. */
+body.docked #titlebar { display: none; }
+body.docked #dock-left.on, body.docked #dock-right.on { color: var(--accent); background: #232323; }
+body.docked #shell { border-left: 1px solid var(--border); }
+body.dock-left #shell { border-left: none; border-right: 1px solid var(--border); }
+
+/* The splitter sits on whichever edge faces the canvas. */
+body.dock-left .splitter { left: auto; right: 0; }
+body.dock-left #dock-close { color: #868686; }
+
+/* ----- scrollbars ----- */
+
+/* Monaco draws its own and takes the colours from theme.js. Everything else on the page uses the
+   browser's, so they are given the same three values here: the panel views, the terminal and the
+   sidebar end up looking like the editor rather than like a web page inside it. */
+
+*::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(121, 121, 121, 0.4);
+  border: none;
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb:hover { background: rgba(100, 100, 100, 0.7); }
+*::-webkit-scrollbar-thumb:active { background: rgba(191, 191, 191, 0.4); }
+
+
+/* ----- resizing without a border ----- */
+
+/* The page reaches the window edge, so there is no frame left for the mouse to grab. These
+   strips sit over the last few pixels and hand a press to the system resize loop instead. */
+
+.resize { position: fixed; z-index: 40; }
+body.docked .resize { display: none; }
+
+.resize.n { top: 0; left: 6px; right: 6px; height: 5px; cursor: ns-resize; }
+.resize.s { bottom: 0; left: 6px; right: 6px; height: 5px; cursor: ns-resize; }
+.resize.w { left: 0; top: 6px; bottom: 6px; width: 5px; cursor: ew-resize; }
+.resize.e { right: 0; top: 6px; bottom: 6px; width: 5px; cursor: ew-resize; }
+
+.resize.nw { top: 0; left: 0; width: 6px; height: 6px; cursor: nwse-resize; }
+.resize.ne { top: 0; right: 0; width: 6px; height: 6px; cursor: nesw-resize; }
+.resize.sw { bottom: 0; left: 0; width: 6px; height: 6px; cursor: nesw-resize; }
+.resize.se { bottom: 0; right: 0; width: 6px; height: 6px; cursor: nwse-resize; }
+
+/* ----- splitters between the panes ----- */
+
+/* Thin, and only coloured once the pointer is on them: a permanent line between every pane adds
+   up to a grid, and the panes already have their own borders. */
+
+.pane-splitter { flex: none; background: transparent; }
+.pane-splitter:hover, .pane-splitter.dragging { background: var(--accent); }
+
+.pane-splitter.vertical { width: 4px; cursor: ew-resize; margin: 0 -2px; z-index: 6; }
+.pane-splitter.horizontal { height: 4px; cursor: ns-resize; margin: -2px 0; z-index: 6; }
+
+body.no-sidebar #split-sidebar { display: none; }
+body.no-panel #split-panel { display: none; }
