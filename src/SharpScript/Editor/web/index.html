@@ -6,7 +6,6 @@
         content="default-src 'self' https://sharpscript.local; script-src 'self' https://sharpscript.local 'unsafe-eval'; style-src 'self' https://sharpscript.local 'unsafe-inline'; font-src 'self' https://sharpscript.local data:; worker-src 'self' blob:;" />
   <title>C# Script</title>
   <link rel="stylesheet" href="vs/editor/editor.main.css" />
-  <link rel="stylesheet" href="xterm/xterm.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -174,7 +173,6 @@
       <section id="panel">
         <div class="tabs">
           <button id="tab-output" class="tab"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-linecap="round"><use href="#icConsole"></use></svg>Output</button>
-          <button id="tab-terminal" class="tab"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><use href="#icTerm"></use></svg>Terminal</button>
           <button id="tab-problems" class="tab"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-linecap="round"><use href="#icErr"></use></svg>Problems<span id="problem-count" class="badge hidden">0</span></button>
           <button id="tab-variables" class="tab"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-linecap="round"><use href="#icInspect"></use></svg>Variables</button>
           <div class="grow"></div>
@@ -184,7 +182,6 @@
 
         <div class="panel-body">
           <div id="view-output" class="view log"></div>
-          <div id="view-terminal" class="view terminal"></div>
           <ul id="view-problems" class="view problems"></ul>
           <div id="view-variables" class="view variables"></div>
         </div>
@@ -207,9 +204,6 @@
     </main>
   </div>
 </div>
-
-<!-- xterm is a UMD bundle and would register itself with Monaco's AMD loader instead of the
-     window if it came second, so it is loaded first and left as a global. -->
 
 <div id="references-panel" class="modal hidden">
   <div class="modal-box">
@@ -257,8 +251,6 @@
   </div>
 </div>
 
-<script src="xterm/xterm.js"></script>
-<script src="xterm/addon-fit.js"></script>
 <script src="vs/loader.js"></script>
 <script src="theme.js"></script>
 <script src="csharp.js"></script>

@@ -8,7 +8,7 @@ that an IDE can open, and breakpoints stop the solve so the locals can be read.
 
 The window is laid out and coloured after Visual Studio Code's Dark Modern: a title bar the page
 draws itself, a rail of layout toggles, a sidebar of files and parameters, a toolbar, a panel with
-output, a shell, problems and variables, and a status bar. Rhino owns the window, so it stays over
+output, problems and variables, and a status bar. Rhino owns the window, so it stays over
 the canvas and hides with it, without floating over everything else on the screen.
 
 Two buttons at the foot of the rail dock the editor to the left or the right of the canvas.
@@ -131,9 +131,6 @@ be made by hand or in an IDE, and the same list is available over the bridge.
 `ProjectReference` to a csproj alongside the script is built with the SDK on compile and its output
 referenced, so a library can be kept in its own project and edited in an IDE.
 
-The Terminal tab opens PowerShell in the project folder for `dotnet add package`, `dotnet build`
-and git.
-
 ## Driving it from outside
 
 The plugin listens on http://127.0.0.1:57321 while Grasshopper is loaded, and `tools/mcp.js` wraps
@@ -154,12 +151,10 @@ anything able to run code on the machine can already do more than this allows. S
 
 ## Known gaps
 
-- The terminal is a line shell, not a terminal. Its streams are redirected rather than attached to
-  a pseudo console, so a full screen program such as an editor or a pager will not draw, and each
-  command appears twice: once as it is typed and once as PowerShell echoes it. A ConPTY version
-  was written and abandoned: the pseudo console is created and its pipes carry ConPTY's own
-  handshake, but no client ever attaches to it, with the attribute list sized and applied exactly
-  as the documented sequence requires.
+- There is no terminal. One was built and taken out again: as a process with redirected streams it
+  could not do what a terminal tab promises, and everything it was for is covered better elsewhere
+  in the window. Open project folder gives a real shell in one step. The code is in the history if
+  a pseudo console ever cooperates.
 - A breakpoint pauses the whole Grasshopper solve, and the canvas stays live while it does. Editing
   the document while a script is paused has not been thought through.
 - The first completion in a session waits for Roslyn to build its view of the project, which takes

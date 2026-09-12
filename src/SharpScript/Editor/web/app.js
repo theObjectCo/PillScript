@@ -14,13 +14,8 @@
   var diagnoseTimers = {};
   var pendingActive = null;
 
-  var CRLF = String.fromCharCode(13, 10);
   var pending = {};
   var nextRequest = 1;
-
-  var terminal = null;
-  var fitAddon = null;
-  var terminalStarted = false;
 
   var layout = { sidebar: true, minimap: true, panel: true, toolbar: true };
   var panelTab = 'output';
@@ -42,8 +37,8 @@
    'breakpoint-menu', 'menu-toggle', 'menu-remove', 'dock-left', 'dock-right', 'dock-close',
    'splitter', 'locate', 'wrap-code', 'split-sidebar', 'split-panel', 'main',
    't-sidebar', 't-minimap', 't-panel', 't-toolbar', 't-zen',
-   'tab-output', 'tab-terminal', 'tab-problems', 'tab-variables',
-   'view-output', 'view-terminal', 'view-problems', 'view-variables'
+   'tab-output', 'tab-problems', 'tab-variables',
+   'view-output', 'view-problems', 'view-variables'
   ].forEach(function (id) { el[id] = document.getElementById(id); });
 
   // ----- startup ---------------------------------------------------------------------------
@@ -187,8 +182,6 @@
       else if (message.type === 'state') applyState(message);
       else if (message.type === 'diagnostics') applyDiagnostics(message.items || []);
       else if (message.type === 'log') log(message.text, message.kind);
-      else if (message.type === 'terminal') writeTerminal(message.text);
-      else if (message.type === 'terminalExit') writeTerminal(CRLF + '[the shell exited]' + CRLF);
       else if (message.type === 'paused') showPaused(message);
       else if (message.type === 'resumed') clearPaused();
     });
@@ -210,7 +203,6 @@
     el['t-toolbar'].classList.toggle('on', layout.toolbar);
 
     if (editor) editor.updateOptions({ minimap: { enabled: layout.minimap, renderCharacters: false } });
-    if (terminal && fitAddon && layout.panel && panelTab === 'terminal') fitTerminal();
   }
 
   function toggle(name) {
@@ -315,7 +307,6 @@
         if (vertical) pane.style.width = size + 'px';
         else pane.style.height = size + 'px';
 
-        if (terminal && fitAddon && panelTab === 'terminal') fitTerminal();
       }
 
       function stop() {
@@ -339,21 +330,17 @@
   function showTab(name) {
     panelTab = name;
 
-    ['output', 'terminal', 'problems', 'variables'].forEach(function (tab) {
+    ['output', 'problems', 'variables'].forEach(function (tab) {
       el['tab-' + tab].classList.toggle('on', tab === name);
       el['view-' + tab].classList.toggle('on', tab === name);
     });
-
-    if (name === 'terminal') startTerminal();
   }
 
   el['tab-output'].onclick = function () { showTab('output'); };
-  el['tab-terminal'].onclick = function () { showTab('terminal'); };
   el['tab-problems'].onclick = function () { showTab('problems'); };
   el['tab-variables'].onclick = function () { showTab('variables'); };
 
   el['panel-clear'].onclick = function () {
-    if (panelTab === 'terminal' && terminal) { terminal.clear(); return; }
     el['view-output'].innerHTML = '';
   };
 
@@ -395,159 +382,6 @@
     });
 
     el['view-output'].scrollTop = el['view-output'].scrollHeight;
-  }
-
-  // ----- terminal --------------------------------------------------------------------------
-
-  // The shell on the other end is a process with redirected streams, not a terminal. It cannot
-  // interpret a backspace, an arrow key or a break, so the line is edited here and only whole
-  // lines are sent. The local echo is wiped the moment the line is submitted, because the shell
-  // prints the prompt and the command itself and one copy of each is enough.
-
-  var CR = String.fromCharCode(13);
-  var LF = String.fromCharCode(10);
-  var BS = String.fromCharCode(8);
-  var DEL = String.fromCharCode(127);
-  var ETX = String.fromCharCode(3);
-  var ESC = String.fromCharCode(27);
-
-  var ERASE_LINE = ESC + '[2K' + CR;
-  var RUBOUT = BS + ' ' + BS;
-
-  // A bare line feed means "one row down, same column" to a terminal, so output that ends its
-  // lines that way walks off to the right a step at a time. The shell writes some of its lines
-  // like that, so every line break is made into a proper carriage return and line feed.
-  var BARE_LINE_FEED = new RegExp(CR + '?' + LF, 'g');
-
-  var line = '';
-  var history = [];
-  var historyAt = 0;
-
-  function startTerminal() {
-    if (terminal || !window.Terminal) return;
-
-    terminal = new window.Terminal({
-      fontFamily: 'Cascadia Mono, Consolas, monospace',
-      fontSize: 12,
-      cursorBlink: true,
-      allowProposedApi: true,
-      theme: {
-        background: '#181818',
-        foreground: '#cccccc',
-        cursor: '#aeafad',
-        selectionBackground: '#264f78',
-        black: '#272727', red: '#f14c4c', green: '#23d18b', yellow: '#f5f543',
-        blue: '#3b8eea', magenta: '#d670d6', cyan: '#29b8db', white: '#e5e5e5',
-        brightBlack: '#5f5f5f', brightRed: '#f14c4c', brightGreen: '#23d18b',
-        brightYellow: '#f5f543', brightBlue: '#3b8eea', brightMagenta: '#d670d6',
-        brightCyan: '#29b8db', brightWhite: '#e5e5e5'
-      }
-    });
-
-    if (window.FitAddon && window.FitAddon.FitAddon) {
-      fitAddon = new window.FitAddon.FitAddon();
-      terminal.loadAddon(fitAddon);
-    }
-
-    terminal.open(el['view-terminal']);
-    terminal.onData(onTyped);
-
-    window.addEventListener('resize', fitTerminal);
-    fitTerminal();
-
-    if (!terminalStarted) {
-      terminalStarted = true;
-      send({ type: 'terminalStart', cols: terminal.cols, rows: terminal.rows });
-    }
-  }
-
-  function onTyped(data) {
-    for (var i = 0; i < data.length; i++) {
-      var ch = data.charAt(i);
-
-      if (ch === ESC) { i = handleEscape(data, i); continue; }
-      if (ch === CR || ch === LF) { submitLine(); continue; }
-      if (ch === DEL || ch === BS) { rubout(); continue; }
-      if (ch === ETX) { cancelLine(); continue; }
-
-      // Anything below space that is not handled above is a control key the shell cannot use.
-      if (ch < ' ') continue;
-
-      line += ch;
-      terminal.write(ch);
-    }
-  }
-
-  /// Consumes an escape sequence and acts on the two that matter: up and down walk the history.
-  function handleEscape(data, index) {
-    if (data.charAt(index + 1) !== '[') return index;
-
-    var end = index + 2;
-    while (end < data.length && (data.charAt(end) < '@' || data.charAt(end) > '~')) end++;
-
-    var final = data.charAt(end);
-
-    if (final === 'A') recall(-1);
-    else if (final === 'B') recall(1);
-
-    return end;
-  }
-
-  function recall(step) {
-    if (!history.length) return;
-
-    historyAt = Math.max(0, Math.min(history.length, historyAt + step));
-    replaceLine(historyAt === history.length ? '' : history[historyAt]);
-  }
-
-  function replaceLine(text) {
-    terminal.write(ERASE_LINE);
-    line = text;
-    terminal.write(text);
-  }
-
-  function rubout() {
-    if (!line.length) return;
-
-    line = line.slice(0, -1);
-    terminal.write(RUBOUT);
-  }
-
-  function cancelLine() {
-    terminal.write('^C' + CR + LF);
-    line = '';
-    historyAt = history.length;
-  }
-
-  function submitLine() {
-    // The shell echoes the prompt and the command, so the copy typed here is taken back first.
-    terminal.write(ERASE_LINE);
-
-    if (line.trim()) {
-      history.push(line);
-      if (history.length > 200) history.shift();
-    }
-
-    historyAt = history.length;
-
-    send({ type: 'terminalInput', text: line + LF });
-    line = '';
-  }
-
-  function fitTerminal() {
-    if (!terminal || !fitAddon) return;
-
-    try {
-      fitAddon.fit();
-      send({ type: 'terminalResize', cols: terminal.cols, rows: terminal.rows });
-    } catch (error) {
-      // Fitting before the panel has a size throws; the next call gets it right.
-    }
-  }
-
-  function writeTerminal(text) {
-    if (!terminal || !text) return;
-    terminal.write(text.replace(BARE_LINE_FEED, CR + LF));
   }
 
   // ----- breakpoints -----------------------------------------------------------------------

@@ -116,7 +116,6 @@ namespace SharpScript.Editor
         readonly SharpScriptComponent _component;
         readonly WebView2 _web = new WebView2();
         Border _frame;
-        ShellSession _terminal;
         DockHost _dock;
         DispatcherTimer _glide;
         int _dragWidth;
@@ -187,9 +186,6 @@ namespace SharpScript.Editor
 
             _glide?.Stop();
             _glide = null;
-
-            _terminal?.Dispose();
-            _terminal = null;
         }
 
         void OnComponentLog(string text, string kind) => Post(new { type = "log", text, kind });
@@ -449,18 +445,6 @@ namespace SharpScript.Editor
 
                 case "format":
                     Reply(request.Id, await language.FormatAsync(request.File, request.Text));
-                    break;
-
-                case "terminalStart":
-                    StartTerminal(request.Cols, request.Rows);
-                    break;
-
-                case "terminalInput":
-                    _terminal?.Write(request.Text);
-                    break;
-
-                case "terminalResize":
-                    _terminal?.Resize(request.Cols, request.Rows);
                     break;
 
                 case "debugContinue":
@@ -728,32 +712,6 @@ namespace SharpScript.Editor
             CornerRadius = new CornerRadius(0),
             UseAeroCaptionButtons = false
         };
-
-        void StartTerminal(int columns, int rows)
-        {
-            if (_terminal != null) return;
-
-            _component.Project.MirrorToDisk();
-
-            _terminal = new ShellSession();
-            _terminal.Output += text => Dispatcher.BeginInvoke(new Action(
-                () => Post(new { type = "terminal", text })));
-
-            _terminal.Exited += () => Dispatcher.BeginInvoke(new Action(
-                () => Post(new { type = "terminalExit" })));
-
-            try
-            {
-                _terminal.Start(_component.Project.WorkingFolder);
-            }
-            catch (Exception exception)
-            {
-                Post(new { type = "terminal", text = "Could not start a shell: " + exception.Message });
-
-                _terminal.Dispose();
-                _terminal = null;
-            }
-        }
 
         /// <summary>Applies a file operation and tells the page whether it took.</summary>
         void Mutate(Func<string, string> operation, string argument)

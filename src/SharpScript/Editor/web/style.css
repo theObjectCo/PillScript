@@ -338,7 +338,6 @@ button {
 
 .view.on { display: block; }
 .view.log, .view.problems, .view.variables { padding: 10px 16px; }
-.view.terminal { padding: 6px 8px; }
 
 .log .line { display: flex; gap: 12px; }
 .log .time { color: #55575f; flex: none; }
@@ -496,9 +495,6 @@ body.dock-left #dock-close { color: #868686; }
 *::-webkit-scrollbar-thumb:hover { background: rgba(100, 100, 100, 0.7); }
 *::-webkit-scrollbar-thumb:active { background: rgba(191, 191, 191, 0.4); }
 
-/* The terminal keeps its scrollbar on a viewport of its own. */
-.xterm-viewport { scrollbar-width: thin; }
-.xterm-viewport::-webkit-scrollbar-thumb { background: rgba(121, 121, 121, 0.4); }
 
 /* ----- resizing without a border ----- */
 
