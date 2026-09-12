@@ -7,13 +7,20 @@ using Grasshopper.Kernel.Attributes;
 namespace PillScript.Components
 {
     /// <summary>
-    /// Draws the component, and lays a blue plate under it while its editor window is open. On a
-    /// canvas with several script components that is the only way to tell which one the editor in
-    /// front of you belongs to.
+    /// Draws the component, and lays a plate under it while its editor window is open. On a canvas
+    /// with several script components that is the only way to tell which one the editor in front of
+    /// you belongs to.
+    ///
+    /// The plate is halved down the middle and wears the two colours of the pill, so what the
+    /// canvas shows and what the icon shows are recognisably the same thing.
     /// </summary>
     internal sealed class PillScriptAttributes : GH_ComponentAttributes
     {
-        static readonly Color Open = Color.FromArgb(0, 122, 204);
+        // The body colours of the two halves of the capsule, taken from the middle of the
+        // gradients the icPill symbol is painted with.
+        static readonly Color Left = Color.FromArgb(0x1A, 0x44, 0xB4);
+        static readonly Color Right = Color.FromArgb(0xC0, 0x24, 0x14);
+
         const int Offset = 7;
 
         public PillScriptAttributes(PillScriptComponent owner) : base(owner) { }
@@ -33,9 +40,11 @@ namespace PillScript.Components
                 graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
                 using (var path = Rounded(plate, 5))
-                using (var brush = new SolidBrush(Open))
                 {
-                    graphics.FillPath(brush, path);
+                    var middle = plate.Left + plate.Width / 2;
+
+                    Half(graphics, path, Rectangle.FromLTRB(plate.Left, plate.Top, middle, plate.Bottom), Left);
+                    Half(graphics, path, Rectangle.FromLTRB(middle, plate.Top, plate.Right, plate.Bottom), Right);
                 }
 
                 graphics.Restore(state);
@@ -48,6 +57,22 @@ namespace PillScript.Components
         {
             Owner.OpenEditor();
             return GH_ObjectResponse.Handled;
+        }
+
+        /// <summary>
+        /// Fills the part of the plate that falls on one side of the middle. The clip is narrowed
+        /// rather than replaced, so whatever the canvas had already masked off stays masked off,
+        /// and it is put back afterwards.
+        /// </summary>
+        static void Half(Graphics graphics, GraphicsPath plate, Rectangle side, Color colour)
+        {
+            var state = graphics.Save();
+            graphics.SetClip(side, CombineMode.Intersect);
+
+            using (var brush = new SolidBrush(colour))
+                graphics.FillPath(brush, plate);
+
+            graphics.Restore(state);
         }
 
         static GraphicsPath Rounded(Rectangle bounds, int radius)
