@@ -106,6 +106,10 @@ Errors shown while typing come from the semantic model, so they describe the cod
 than the last build. The Problems panel is the record of the last compile, which is a different
 thing and is why both exist.
 
+F12 goes to where a thing is declared, Shift-F12 lists everywhere it is used, and F2 renames it
+across every file in the script at once. These answer for the script's own files only: a type out
+of RhinoCommon is declared in an assembly, and there is no file to open for it.
+
 ## Breakpoints
 
 Click the gutter, or press F9, to mark a line. The marks are compiled into the script: Roslyn
@@ -224,8 +228,8 @@ and Roslyn arrive as NuGet packages and are not redistributed here.
   a second or two. After that it is quick.
 - Completion inserts the item's display text. Roslyn's own insertion rules, which matter for
   override and partial method completion, are not applied.
-- Refactoring, go to definition and find references are not wired up, though the workspace that
-  would answer them is already there.
+- Rename is the only refactoring wired up. The workspace would answer for the rest, and they are
+  not offered.
 - The editor page can be opened in a browser for work on the UI itself: `index.html` shows a
   sample, and `index.html?probe=1` stands in a fake component so the Monaco wiring can be
   exercised without Rhino.

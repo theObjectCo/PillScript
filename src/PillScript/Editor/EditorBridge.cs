@@ -189,6 +189,21 @@ namespace PillScript.Editor
                 case "format":
                     Reply(request.Id, await _model.FormatAsync(request.File, request.Text));
                     break;
+
+                case "define":
+                    Reply(request.Id, await _model.DefineAsync(request.File, request.Text, request.Offset));
+                    break;
+
+                // Not "references": that is the window listing what the project is built against.
+                case "usages":
+                    Reply(request.Id, await _model.ReferencesAsync(
+                        request.File, request.Text, request.Offset));
+                    break;
+
+                case "rename":
+                    Reply(request.Id, await _model.RenameAsync(
+                        request.File, request.Text, request.Offset, request.Name));
+                    break;
             }
         }
 

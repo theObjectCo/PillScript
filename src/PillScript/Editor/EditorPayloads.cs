@@ -118,6 +118,29 @@ namespace PillScript.Editor
                 problems = set.Problems.Select(p => new { severity = p.Severity, message = p.Message })
             };
 
+        /// <summary>Places in the script's own files, for going to one or listing them all.</summary>
+        public static object Locations(IEnumerable<SourceSpan> spans)
+            => spans.Select(span => new
+            {
+                file = span.File,
+                line = span.Line,
+                column = span.Column,
+                endLine = span.EndLine,
+                endColumn = span.EndColumn
+            });
+
+        /// <summary>The same, with what each place should be replaced by.</summary>
+        public static object Edits(IEnumerable<SourceEdit> edits)
+            => edits.Select(edit => new
+            {
+                file = edit.File,
+                line = edit.Line,
+                column = edit.Column,
+                endLine = edit.EndLine,
+                endColumn = edit.EndColumn,
+                text = edit.Text
+            });
+
         public static object Completions(IEnumerable<CompletionEntry> entries)
             => entries.Select(e => new
             {

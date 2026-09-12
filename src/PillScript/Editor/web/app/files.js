@@ -115,6 +115,14 @@
     if (state.active) save(state.active);
   };
 
+  /// Saves every file, which a rename needs: it may touch one that is not on screen.
+  SS.flushAll = function () {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = null;
+
+    Object.keys(state.models).forEach(save);
+  };
+
   SS.compile = function () {
     SS.flush();
     SS.log('Compiling ' + Object.keys(state.models).filter(SS.isSource).join(', '));

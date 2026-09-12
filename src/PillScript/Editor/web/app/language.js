@@ -1,5 +1,6 @@
-// What Monaco asks and Roslyn answers: completion, hover, signature help and the squiggles that
-// appear while typing, before anything has been compiled.
+// What Monaco asks and Roslyn answers: completion, hover, signature help, the squiggles that
+// appear while typing, and the three that are about a symbol rather than a position - go to
+// definition, find all references, and rename. All of it before anything has been compiled.
 (function () {
   'use strict';
 
@@ -124,11 +125,80 @@
         });
       }
     });
+
+    registerSymbolServices(id);
   };
 
   function completionKind(name) {
     var kinds = state.monaco.languages.CompletionItemKind;
     return name && kinds[name] !== undefined ? kinds[name] : kinds.Text;
+  }
+
+  // ----- where a thing is, and what renaming it would change ------------------------------------
+
+  function uriOf(file) {
+    return state.monaco.Uri.parse('inmemory://script/' + file);
+  }
+
+  function rangeOf(at) {
+    return {
+      startLineNumber: at.line,
+      startColumn: at.column,
+      endLineNumber: at.endLine || at.line,
+      endColumn: at.endColumn || at.column
+    };
+  }
+
+  /// Roslyn answers only for the script's own files: a type out of RhinoCommon lives in an
+  /// assembly, and there is no file to open for it.
+  function places(found) {
+    if (!found || !found.length) return [];
+
+    return found
+      .filter(function (where) { return state.models[where.file]; })
+      .map(function (where) { return { uri: uriOf(where.file), range: rangeOf(where) }; });
+  }
+
+  function registerSymbolServices(id) {
+    var monaco = state.monaco;
+
+    monaco.languages.registerDefinitionProvider(id, {
+      provideDefinition: function (model, position) {
+        return SS.request('define', at(model, position)).then(places);
+      }
+    });
+
+    monaco.languages.registerReferenceProvider(id, {
+      provideReferences: function (model, position) {
+        return SS.request('usages', at(model, position)).then(places);
+      }
+    });
+
+    monaco.languages.registerRenameProvider(id, {
+      provideRenameEdits: function (model, position, newName) {
+        // The edits are worked out against the copy of the project the host holds, so every file
+        // it might touch is sent across first. Messages arrive in order, so the saves land first.
+        SS.flushAll();
+
+        var query = at(model, position);
+        query.name = newName;
+
+        return SS.request('rename', query).then(function (found) {
+          if (!found || !found.length) return { edits: [] };
+
+          return {
+            edits: found
+              .filter(function (edit) { return state.models[edit.file]; })
+              .map(function (edit) {
+                return {
+                  resource: uriOf(edit.file),
+                  textEdit: { range: rangeOf(edit), text: edit.text }
+                };
+              })
+          };
+        });
+      }
+    });
   }
 
   // ----- diagnostics ---------------------------------------------------------------------------

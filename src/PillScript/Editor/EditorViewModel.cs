@@ -204,5 +204,14 @@ namespace PillScript.Editor
         }
 
         public Task<string> FormatAsync(string file, string text) => Language.FormatAsync(file, text);
+
+        public async Task<object> DefineAsync(string file, string text, int offset)
+            => EditorPayloads.Locations(await Language.DefineAsync(file, text, offset));
+
+        public async Task<object> ReferencesAsync(string file, string text, int offset)
+            => EditorPayloads.Locations(await Language.ReferencesAsync(file, text, offset));
+
+        public async Task<object> RenameAsync(string file, string text, int offset, string name)
+            => EditorPayloads.Edits(await Language.RenameAsync(file, text, offset, name));
     }
 }

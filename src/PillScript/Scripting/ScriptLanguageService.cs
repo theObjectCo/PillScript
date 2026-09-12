@@ -20,7 +20,7 @@ namespace PillScript.Scripting
     /// already wrong. It holds the same references the compiler uses, so it never claims a type
     /// exists that the build will then reject.
     /// </summary>
-    internal sealed class ScriptLanguageService : IDisposable
+    internal sealed partial class ScriptLanguageService : IDisposable
     {
         readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
         readonly Dictionary<string, DocumentId> _documents =
