@@ -1,0 +1,26 @@
+---
+name: PillScript
+version: 0.1.0
+authors:
+  - AUTHOR_NAME
+description: >
+  A C# script component for Grasshopper in Rhino 8, with the editor the built-in one does not have.
+
+  The editor is Monaco with Roslyn behind it: completion, hover, signature help and diagnostics
+  that come from the same reference set the build uses. Compilation happens when asked rather than
+  on every keystroke, and a component whose sources have moved past its build says so on the
+  canvas. A script is a folder of files rather than a single buffer, and that folder is a real
+  csproj an IDE can open, so NuGet packages and project references work. Inputs and outputs are
+  read out of the RunScript signature instead of being dragged on by hand. Breakpoints stop the
+  solve and show the locals, with Rhino still responsive.
+
+  Windows only, and it needs the WebView2 runtime, which Rhino 8 already installs.
+url: https://github.com/theObjectCo/PillScript
+icon: icon.png
+keywords:
+  - script
+  - csharp
+  - editor
+  - monaco
+  - roslyn
+  - debugger

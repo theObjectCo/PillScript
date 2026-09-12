@@ -31,4 +31,10 @@
     </None>
   </ItemGroup>
 
+  <!-- What Yak reads when the build output is turned into a package. -->
+  <ItemGroup>
+    <None Include="manifest.yml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="icon.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

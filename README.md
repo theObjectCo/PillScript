@@ -31,7 +31,15 @@ While an editor is open its component wears a blue plate on the canvas. With sev
 components in a definition that is the only way to tell which one the window in front of you
 belongs to.
 
-## Building and installing
+## Installing
+
+Rhino 8.30 or newer, Windows, 64 bit. The editor runs in WebView2, which Rhino 8 installs for its
+own interface, so there is nothing else to fetch.
+
+In Rhino, run `_PackageManager`, search for PillScript, install it and restart Rhino. The download
+is about 13 MB, most of it Monaco.
+
+## Building it yourself
 
 ```
 dotnet build src/PillScript/PillScript.csproj -c Release
@@ -40,6 +48,18 @@ dotnet build src/PillScript/PillScript.csproj -c Release
 Copy everything in `src/PillScript/bin/Release` into
 `%APPDATA%\Grasshopper\Libraries\PillScript` and restart Rhino. The `web` folder has to travel
 with the `.gha`; it holds Monaco.
+
+The same folder is what the package is made of. `manifest.yml` and `icon.png` are copied into it by
+the build, so a package is built from the build output:
+
+```
+"C:\Program Files\Rhino 8\System\Yak.exe" build --platform win
+```
+
+run inside `src/PillScript/bin/Release`. Yak reads the minimum Rhino version out of the assembly's
+own references, which is where the 8.30 in the package name comes from: the Grasshopper package
+this builds against. Referencing an older one widens the range, and wants testing on whatever the
+oldest Rhino is that has to run it.
 
 ## Writing a script
 
