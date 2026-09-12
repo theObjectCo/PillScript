@@ -1,4 +1,4 @@
-# SharpScript
+# PillScript
 
 A C# script component for Grasshopper in Rhino 8. It differs from the built-in one in six ways:
 the editor is Monaco with Roslyn behind it, compilation happens when asked rather than on every
@@ -34,11 +34,11 @@ belongs to.
 ## Building and installing
 
 ```
-dotnet build src/SharpScript/SharpScript.csproj -c Release
+dotnet build src/PillScript/PillScript.csproj -c Release
 ```
 
-Copy everything in `src/SharpScript/bin/Release` into
-`%APPDATA%\Grasshopper\Libraries\SharpScript` and restart Rhino. The `web` folder has to travel
+Copy everything in `src/PillScript/bin/Release` into
+`%APPDATA%\Grasshopper\Libraries\PillScript` and restart Rhino. The `web` folder has to travel
 with the `.gha`; it holds Monaco.
 
 ## Writing a script
@@ -109,7 +109,7 @@ running state. That can be turned off per component.
 
 ## The project on disk
 
-Each component owns a folder under `%LOCALAPPDATA%\SharpScript\projects`, holding a normal SDK
+Each component owns a folder under `%LOCALAPPDATA%\PillScript\projects`, holding a normal SDK
 style project. Open that folder in Visual Studio, Rider or VS Code and you get full completion
 against the Rhino that is running: `Directory.Build.targets` is regenerated on every mirror with
 this machine's paths, and `GlobalUsings.g.cs` carries the same usings the component compiles with.
@@ -142,18 +142,18 @@ this way appears in the editor immediately and the component goes stale until it
 Register it with:
 
 ```
-claude mcp add sharpscript -- node <repo>/tools/mcp.js
+claude mcp add pillscript -- node <repo>/tools/mcp.js
 ```
 
 The port is loopback only and has no authentication, which is the same posture as a debug server:
 anything able to run code on the machine can already do more than this allows. Set
-`SHARPSCRIPT_BRIDGE=off` to keep the port shut, or `SHARPSCRIPT_BRIDGE_PORT` to move it.
+`PILLSCRIPT_BRIDGE=off` to keep the port shut, or `PILLSCRIPT_BRIDGE_PORT` to move it.
 
 ## How the code is laid out
 
 Three layers, and no file over about three hundred lines.
 
-`src/SharpScript/Scripting` is the model, and knows nothing about windows. A `ScriptProject` holds
+`src/PillScript/Scripting` is the model, and knows nothing about windows. A `ScriptProject` holds
 the files and mirrors them to a folder; `ScriptProject.Disk.cs` is that mirror and
 `ProjectTemplates` is what a new script starts as. `PackageResolver` turns what the csproj
 references into assembly paths, with `DotnetSdk` running the SDK and `RestoreAssets` reading what
@@ -161,7 +161,7 @@ restore left behind. `ScriptCompiler`, `ScriptSignature`, `ScriptRunner` and `Sc
 build and run; `ScriptLanguageService` answers the editor between builds, formatting its answers
 through `LanguageFormats`.
 
-`src/SharpScript/Editor` is the view and the view model. `EditorViewModel` is everything the
+`src/PillScript/Editor` is the view and the view model. `EditorViewModel` is everything the
 editor can do to a component, written without a single UI type. `EditorBridge` carries messages
 and decides which half each belongs to, `EditorPayloads` holds the wire format and `EditorRequest`
 parses what arrives. `ScriptEditorWindow` is left with what only a window can do, leaning on
@@ -172,14 +172,16 @@ The page under `Editor/web` is plain modules, no build step: `app/state.js` hold
 `app/bridge.js` is the only thing that talks to WebView2, and the rest take a part of the window
 each. `index.html` lists them in load order. The stylesheet is split the same way under `css/`.
 
-`src/SharpScript/Components` is the Grasshopper surface, and `src/SharpScript/Bridge` is the
+`src/PillScript/Components` is the Grasshopper surface, and `src/PillScript/Bridge` is the
 loopback endpoint an agent reaches.
 
-## Third-party code
+## Licence
 
-The `src/SharpScript/Editor/web/vs` folder is the Monaco Editor 0.56.0, redistributed unchanged
-under the MIT licence, with the notice kept alongside it in that folder. Rhino, Grasshopper and
-Roslyn arrive as NuGet packages and are not redistributed here.
+MIT, in `LICENSE` at the root.
+
+The `src/PillScript/Editor/web/vs` folder is the Monaco Editor 0.56.0, redistributed unchanged
+under its own MIT licence, with the notice kept alongside it in that folder. Rhino, Grasshopper
+and Roslyn arrive as NuGet packages and are not redistributed here.
 
 ## Known gaps
 

@@ -7,7 +7,7 @@
 
 const http = require('http');
 
-const PORT = Number(process.env.SHARPSCRIPT_BRIDGE_PORT) || 57321;
+const PORT = Number(process.env.PILLSCRIPT_BRIDGE_PORT) || 57321;
 const PROTOCOL = '2024-11-05';
 
 const COMPONENT = {
@@ -167,7 +167,7 @@ function call(tool, args) {
       resolve(JSON.stringify({
         error:
           'The Grasshopper bridge did not answer on port ' + PORT + ' (' + error.code + '). ' +
-          'Start Rhino, open Grasshopper, and make sure the SharpScript plugin is installed.'
+          'Start Rhino, open Grasshopper, and make sure the PillScript plugin is installed.'
       }));
     });
 
@@ -191,7 +191,7 @@ async function handle(message) {
     reply(id, {
       protocolVersion: PROTOCOL,
       capabilities: { tools: {} },
-      serverInfo: { name: 'sharpscript', version: '0.1.0' }
+      serverInfo: { name: 'pillscript', version: '0.1.0' }
     });
     return;
   }
