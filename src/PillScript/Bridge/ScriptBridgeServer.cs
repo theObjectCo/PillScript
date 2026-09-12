@@ -32,15 +32,29 @@ namespace PillScript.Bridge
         public static int Port { get; private set; }
 
         /// <summary>
-        /// Starts listening unless PILLSCRIPT_BRIDGE is set to off. Failing to start is not worth
-        /// interrupting anybody over: the editor works without it.
+        /// True when PILLSCRIPT_BRIDGE asks for the bridge. It is off unless asked for, because
+        /// installing the editor should not also open a port that writes and runs code; only
+        /// somebody driving the component from outside Rhino wants that, and they know they do.
+        /// </summary>
+        public static bool Wanted
+        {
+            get
+            {
+                var setting = Environment.GetEnvironmentVariable("PILLSCRIPT_BRIDGE");
+
+                return string.Equals(setting, "on", StringComparison.OrdinalIgnoreCase)
+                       || string.Equals(setting, "1", StringComparison.OrdinalIgnoreCase)
+                       || string.Equals(setting, "true", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        /// <summary>
+        /// Starts listening, if asked to. Failing to start is not worth interrupting anybody over:
+        /// the editor works without it.
         /// </summary>
         public static void Start()
         {
-            if (_listener != null) return;
-
-            var setting = Environment.GetEnvironmentVariable("PILLSCRIPT_BRIDGE");
-            if (string.Equals(setting, "off", StringComparison.OrdinalIgnoreCase)) return;
+            if (_listener != null || !Wanted) return;
 
             Port = ReadPort();
 
@@ -102,20 +116,30 @@ namespace PillScript.Bridge
             // whole exchange including writing the answer is wrapped.
             try
             {
-                string body;
-
-                using (var reader = new StreamReader(context.Request.InputStream, Encoding.UTF8))
-                    body = reader.ReadToEnd();
+                var refusal = Refuse(context.Request);
 
                 object result;
 
-                try
+                if (refusal != null)
                 {
-                    result = Dispatch(body);
+                    context.Response.StatusCode = 403;
+                    result = new { error = refusal };
                 }
-                catch (Exception exception)
+                else
                 {
-                    result = new { error = exception.Message };
+                    string body;
+
+                    using (var reader = new StreamReader(context.Request.InputStream, Encoding.UTF8))
+                        body = reader.ReadToEnd();
+
+                    try
+                    {
+                        result = Dispatch(body);
+                    }
+                    catch (Exception exception)
+                    {
+                        result = new { error = exception.Message };
+                    }
                 }
 
                 var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(result, Json));
@@ -130,6 +154,37 @@ namespace PillScript.Bridge
                 try { context.Response.Abort(); }
                 catch (Exception) { }
             }
+        }
+
+        /// <summary>
+        /// Says why a request is not being answered, or null to answer it. This is what keeps a
+        /// page in a browser from driving Rhino: the port is reachable from one, and writing a
+        /// script and compiling it are side effects, so a page never needs to read the answer to
+        /// get what it wants.
+        /// </summary>
+        static string Refuse(HttpListenerRequest request)
+        {
+            // A page can only set this content type cross-origin by asking permission first, and
+            // that question is one this listener never answers. A local caller just sets it.
+            var type = request.ContentType ?? string.Empty;
+
+            if (type.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) < 0)
+                return "This endpoint takes application/json.";
+
+            // Anything a browser sends from a page carries this, whatever the page does.
+            if (!string.IsNullOrEmpty(request.Headers["Origin"]))
+                return "This endpoint does not answer requests from a web page.";
+
+            // With the name rebound to the loopback address a page counts as same origin, and the
+            // two checks above stop applying. What it cannot do is arrive naming the address.
+            var host = request.Headers["Host"] ?? string.Empty;
+
+            if (!host.StartsWith("127.0.0.1", StringComparison.Ordinal)
+                && !host.StartsWith("localhost:", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+                return "This endpoint answers on the loopback address only.";
+
+            return null;
         }
 
         static object Dispatch(string body)

@@ -167,7 +167,8 @@ function call(tool, args) {
       resolve(JSON.stringify({
         error:
           'The Grasshopper bridge did not answer on port ' + PORT + ' (' + error.code + '). ' +
-          'Start Rhino, open Grasshopper, and make sure the PillScript plugin is installed.'
+          'The bridge is off unless asked for: set PILLSCRIPT_BRIDGE=on in the environment ' +
+          'Rhino starts from, then start Rhino and open Grasshopper with PillScript installed.'
       }));
     });
 

@@ -133,11 +133,12 @@ referenced, so a library can be kept in its own project and edited in an IDE.
 
 ## Driving it from outside
 
-The plugin listens on http://127.0.0.1:57321 while Grasshopper is loaded, and `tools/mcp.js` wraps
-that as an MCP server so an agent can work on a component's project directly: list the components
-on the open canvases, read, write, rename and delete files, compile and read the diagnostics, solve
-and read what the script printed. It is the same project the editor window shows, so a file written
-this way appears in the editor immediately and the component goes stale until it is compiled.
+With `PILLSCRIPT_BRIDGE=on` in the environment Rhino starts from, the plugin listens on
+http://127.0.0.1:57321, and `tools/mcp.js` wraps that as an MCP server so an agent can work on a
+component's project directly: list the components on the open canvases, read, write, rename and
+delete files, compile and read the diagnostics, solve and read what the script printed. It is the
+same project the editor window shows, so a file written this way appears in the editor immediately
+and the component goes stale until it is compiled. `PILLSCRIPT_BRIDGE_PORT` moves the port.
 
 Register it with:
 
@@ -145,9 +146,17 @@ Register it with:
 claude mcp add pillscript -- node <repo>/tools/mcp.js
 ```
 
-The port is loopback only and has no authentication, which is the same posture as a debug server:
-anything able to run code on the machine can already do more than this allows. Set
-`PILLSCRIPT_BRIDGE=off` to keep the port shut, or `PILLSCRIPT_BRIDGE_PORT` to move it.
+Nothing listens unless asked for. The editor needs no port at all: it talks to the plugin inside
+the process, so installing the package gets you the editor and nothing else. Turning the bridge on
+is worth understanding first, because writing a file and compiling it is running code.
+
+Binding to the loopback address keeps other machines out, and does nothing about the browser on
+this one: a page can reach 127.0.0.1, and it does not need to read the answer for a written and
+compiled script to have run. So a request is only answered when it declares `application/json`,
+carries no `Origin` header, and names the loopback address in `Host` — a page cannot manage the
+first two, and the third is what a rebound name gives itself away by. There is no authentication
+beyond that, which is the same posture as a debug server: anything already running code on the
+machine can do more than this allows.
 
 ## How the code is laid out
 
