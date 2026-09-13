@@ -14,11 +14,13 @@ namespace PillScript.Scripting
     internal static class ProjectTemplates
     {
         /// <summary>
-        /// The usings every file in the script starts with. This is an ordinary project file, so
-        /// it can be edited: adding a line here is how a script reaches a namespace it uses often
-        /// without repeating the using in each file.
+        /// The usings every file in the script starts with. An ordinary project file, so it can be
+        /// edited: adding a line here is how a script reaches a namespace it uses often without
+        /// repeating the using in each file.
         /// </summary>
-        public const string Usings = @"// Namespaces every file in this script can use.
+        public const string Usings = @"// Namespaces every file in this script starts with, so no file has to repeat them. Add a line
+// here rather than a using at the top of each file; this is an ordinary file of the project and
+// the next compile picks it up.
 global using System;
 global using System.Collections;
 global using System.Collections.Generic;
@@ -32,6 +34,10 @@ global using Grasshopper.Kernel.Types;
 global using PillScript;
 ";
 
+        /// <summary>
+        /// The project file. It carries no machine specific paths of its own, which is what lets
+        /// it be both the thing an IDE opens and the thing the component restores against.
+        /// </summary>
         public const string Project = @"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
@@ -42,27 +48,70 @@ global using PillScript;
   </PropertyGroup>
 
   <!--
-    Rhino, Grasshopper and the script API arrive through Directory.Build.targets, which
-    PillScript regenerates for whichever Rhino is running. Add NuGet packages below and press
-    Compile: they are restored and used by the component as well as by the IDE.
+    A real project file. Open the folder in an IDE and it builds there too.
+
+    Rhino, Grasshopper and the script API are not listed here: they arrive through
+    Directory.Build.targets, which PillScript writes next to this file and regenerates for
+    whichever Rhino is running. That is what keeps this file free of paths that only work on
+    one machine.
+
+    Add a package below and press Compile: it is restored and used by the component and by the
+    IDE both. A DLL goes in as a Reference with a HintPath, and a library kept beside the script
+    as a ProjectReference, which is built before the script that needs it. The References window
+    in the editor edits this same file, so either way round works.
   -->
   <ItemGroup>
     <!-- <PackageReference Include=""MathNet.Numerics"" Version=""5.0.0"" /> -->
+    <!-- <Reference Include=""Something""><HintPath>C:\libs\Something.dll</HintPath></Reference> -->
   </ItemGroup>
 
 </Project>
 ";
 
-        public const string Source = @"public class Script : ScriptBase
+        /// <summary>
+        /// What a new component holds. The comment at the top is the documentation for writing
+        /// one of these: the rules the compiler enforces, how a parameter becomes an input, and
+        /// what lives between runs. It is the first thing anybody opening the editor reads, and
+        /// the only place they are told any of it.
+        /// </summary>
+        public const string Source = @"// Where this component's parameters come from: every RunScript parameter below is an
+// input, every out parameter an output, in the order written. The type picks the
+// Grasshopper parameter and how the data arrives. A List<T> or T[] makes it a list, a
+// DataTree<T> or GH_Structure<T> a tree, anything else one value.
+//
+// Attributes fill in the rest, all optional. [Name(""R"")] is the short name shown on the
+// component, [Description(""..."")] the tooltip, [Default(10.0)] a value to use when
+// nothing is connected, [Optional] permission to be left empty. A plain C# default says
+// what [Default] says: double radius = 10.0.
+//
+// The compiler wants one public class with a public RunScript, a parameterless
+// constructor, at least one out parameter, and no two parameters sharing a name.
+//
+// Nothing is compiled until asked: F5 or Ctrl-B. Until then the component runs the build
+// it already has and wears a plate on the canvas. F9 sets a breakpoint, F12 goes to a
+// declaration, Shift-F12 finds every use, F2 renames across files. More files: + in the
+// sidebar.
+//
+// RunScript runs once per item rather than once per solve, and Iteration counts them. The
+// class becomes an object once per build and every call runs on that object, so a field
+// keeps what you put in it between calls, until the next compile clears it.
+//
+// From ScriptBase: Print writes to the output pane and the out parameter; Warning, Error
+// and Remark put a bubble on the component; Component, RhinoDocument and Iteration say
+// where you are.
+
+public class Script : ScriptBase
 {
     public void RunScript(
         [Description(""Radius of the circle"")] [Default(10.0)] double radius,
-        [Description(""Plane the circle sits on"")] [Optional] Plane plane,
+        [Description(""Plane the circle sits on, world XY when nothing is connected"")]
+        [Optional] Plane plane,
         out Circle result)
     {
         if (!plane.IsValid) plane = Plane.WorldXY;
 
         result = new Circle(plane, radius);
+
         Print(""Circumference: {0:F2}"", result.Circumference);
     }
 }
