@@ -163,9 +163,13 @@ control currently holds into the variable handed to it. `RegisterUi` runs before
 looks a control up by name.
 
 A component joins the panel through Publish to panel in its menu, and the panel opens the first
-time one does. Several published components stack in it in document order, each under a heading
-carrying the component's nickname and four characters of its id, and each rolls up by clicking
-that heading. What the controls are set to is written into the .gh, along with which sections are
+time one does. Several published components stack in it, each under a heading carrying four
+characters of its id. Clicking a heading rolls the section up; dragging one moves the section
+among the others, because scripts arrive on the canvas in the order they were written and that has
+little to do with the order they want to be read in. A section is named by the script's first
+`Caption`, unless the component has been renamed on the canvas, in which case the nickname wins.
+
+What the controls are set to is written into the .gh, along with the order and which sections are
 rolled up, so a definition opens with the panel as it was left; what they start at comes from the
 code, so changing a default in `RegisterUi` changes it for every definition that has not been
 touched. The bar at the foot says how long the last solve took, and turns its lamp red when the

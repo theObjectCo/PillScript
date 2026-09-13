@@ -185,7 +185,10 @@ public override void RegisterUi(UiRegistrar register)
 panel holds. Nothing is looked up by name at the point of use.
 
 Then turn on **Publish to panel** in the component's menu. The panel stacks a section for every
-published component, so several scripts can share it, and each section rolls up by its heading.
+published component, so several scripts can share it. Clicking a heading rolls its section up and
+dragging one moves it among the others; both are kept with the document. The heading takes the
+first `Caption` as its name, so the example above gives a section called Outline. Renaming the
+component on the canvas takes the heading back.
 
 The controls:
 
