@@ -39,6 +39,7 @@ namespace PillScript.Scripting
             GH_Component component,
             int iteration,
             int outputOffset,
+            UiRegistrar register,
             Action<string> print)
         {
             var signature = script.Signature;
@@ -53,6 +54,10 @@ namespace PillScript.Scripting
                 scripted.Iteration = iteration;
                 scripted.RhinoDocument = Rhino.RhinoDoc.ActiveDoc;
                 scripted.PrintSink = print;
+
+                // Before the run, so the variables the registrar writes into hold what the panel
+                // holds by the time RunScript reads them.
+                if (register != null) scripted.RegisterUi(register);
             }
 
             var parameters = signature.Run.GetParameters();

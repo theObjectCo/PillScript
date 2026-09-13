@@ -1,10 +1,11 @@
 # PillScript
 
-A C# script component for Grasshopper in Rhino 8. It differs from the built-in one in six ways:
+A C# script component for Grasshopper in Rhino 8. It differs from the built-in one in seven ways:
 the editor is Monaco with Roslyn behind it, compilation happens when asked rather than on every
 keystroke, a script is a folder of files rather than a single buffer, the component's inputs and
 outputs are read out of the code instead of being dragged on by hand, the folder is a real csproj
-that an IDE can open, and breakpoints stop the solve so the locals can be read.
+that an IDE can open, breakpoints stop the solve so the locals can be read, and a script can put
+controls of its own in a Rhino panel.
 
 The window is laid out and coloured after Visual Studio Code's Dark Modern: a title bar the page
 draws itself, a rail of layout toggles, a sidebar of files and parameters, a toolbar, a panel with
@@ -133,6 +134,51 @@ So state here survives solving and does not survive editing, which is usually wh
 do. The trap is the same one the built-in component has: a field that collects something grows on
 every iteration, not every solve, and nothing empties it until the next compile. `Iteration == 0`
 is the moment to clear it if what you want is one solve's worth.
+
+## Controls in a Rhino panel
+
+A script can put controls in a Rhino panel, docked beside Layers and Properties instead of drawn
+on the canvas. Override `RegisterUi` and register them:
+
+```csharp
+public class Script : ScriptBase
+{
+    double radius;
+    int sides;
+    bool bake;
+
+    public override void RegisterUi(UiRegistrar register)
+    {
+        register.Text("Outline");
+        register.Slider("radius", 1, 50, 12, out radius);
+        register.Whole("sides", 6, out sides, label: "corners");
+        register.Button("bake", out bake, label: "Bake to Rhino");
+    }
+}
+```
+
+Each call does two things at once: it says what the panel should draw, and it writes what that
+control currently holds into the variable handed to it. `RegisterUi` runs before every solve, so
+`radius` holds what the panel holds by the time `RunScript` reads it, and nothing in the script
+looks a control up by name.
+
+A component joins the panel through Publish to panel in its menu, and the panel opens the first
+time one does. Several published components stack in it in document order, each under its own
+heading. What the controls are set to is written into the .gh, so a definition opens with the
+panel as it was left; what they start at comes from the code, so changing a default in
+`RegisterUi` changes it for every definition that has not been touched.
+
+A button is true for the one solve its press caused and false on every other, which is what lets
+a script act on a press without having to remember whether it already did. Dragging a slider is
+one solve after the dragging stops rather than forty along the way. The kinds are `Slider`,
+`Number`, `Whole`, `Toggle`, `Choice`, `Button`, and `Text` for a heading or a word of
+explanation.
+
+The panel holds a web view and nothing else, so every control is an HTML element and a script that
+carries a `ui.css` restyles them: the file is appended after the default sheet, so its rules win
+by cascade order rather than by specificity. That styling is not scoped to the section it came
+from. A `ui.css` in one script restyles the whole panel, including the sections other components
+published, which is worth knowing before writing one.
 
 ## An example to open
 
@@ -263,6 +309,12 @@ each. `index.html` lists them in load order. The stylesheet is split the same wa
 
 `src/PillScript/Components` is the Grasshopper surface, and `src/PillScript/Bridge` is the
 loopback endpoint an agent reaches.
+
+`src/PillScript/Panel` is the Rhino panel. `UiPanelHost` is an Eto panel holding a web view and
+little else, because Rhino 8 accepts a Windows Forms control here and then never builds it.
+`UiPublication` gathers what the published components declare into the payload the page draws, and
+`UiRegistrar`, over in `Scripting`, is the class a script registers through. The page itself is
+`Editor/web/panel`, separate from the editor's and much smaller.
 
 ## Licence
 
