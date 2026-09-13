@@ -113,6 +113,10 @@ how the data arrives.
 - `List<Point3d> corners` is a list, and `Point3d[]` does the same
 - `DataTree<Curve> curves` is a tree, and `GH_Structure<IGH_Goo>` does the same
 
+A `GH_Structure` of goo arrives as it is. A `DataTree` of a plain type has each item converted, and
+an item that will not convert is left out with the component saying which parameter and which
+branch it came from; a tree can therefore be shorter inside the script than it was on the wire.
+
 Four attributes fill in the rest, all of them optional.
 
 - `[Name(""R"")]` sets the short name shown on the component, which is otherwise the parameter name

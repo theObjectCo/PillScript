@@ -74,7 +74,7 @@ namespace PillScript.Scripting
                 }
 
                 var param = signature.Inputs[inputIndex];
-                arguments[i] = ReadInput(access, inputIndex, param);
+                arguments[i] = ReadInput(access, inputIndex, param, component);
                 inputIndex++;
             }
 
@@ -90,7 +90,7 @@ namespace PillScript.Scripting
             }
         }
 
-        static object ReadInput(IGH_DataAccess access, int index, ScriptParam param)
+        static object ReadInput(IGH_DataAccess access, int index, ScriptParam param, GH_Component component)
         {
             switch (param.Access)
             {
@@ -98,7 +98,7 @@ namespace PillScript.Scripting
                     return ReadList(access, index, param);
 
                 case ScriptAccess.Tree:
-                    return ReadTree(access, index, param);
+                    return ReadTree(access, index, param, component);
 
                 default:
                     var arguments = new[] { (object)index, Blank(param.ElementType) };
@@ -121,9 +121,10 @@ namespace PillScript.Scripting
 
         /// <summary>
         /// Trees arrive as goo. A GH_Structure signature takes them as they are; a DataTree of a
-        /// plain type gets each item unwrapped into that type.
+        /// plain type gets each item unwrapped into that type, and whatever will not go says so
+        /// on the component rather than leaving a branch quietly shorter than it arrived.
         /// </summary>
-        static object ReadTree(IGH_DataAccess access, int index, ScriptParam param)
+        static object ReadTree(IGH_DataAccess access, int index, ScriptParam param, GH_Component component)
         {
             var isStructure = param.DeclaredType.GetGenericTypeDefinition() == typeof(GH_Structure<>);
 
@@ -143,17 +144,49 @@ namespace PillScript.Scripting
 
             var add = tree.GetType().GetMethod("Add", new[] { param.ElementType, typeof(GH_Path) });
 
+            var refused = 0;
+            GH_Path where = null;
+            string what = null;
+
             for (var branch = 0; branch < source.PathCount; branch++)
             {
                 var path = source.Paths[branch];
                 foreach (var goo in source.Branches[branch])
                 {
                     if (TryUnwrap(goo, param.ElementType, out var value))
+                    {
                         add.Invoke(tree, new[] { value, path });
+                        continue;
+                    }
+
+                    refused++;
+                    if (where != null) continue;
+
+                    where = path;
+                    what = goo?.TypeName ?? "null";
                 }
             }
 
+            if (refused > 0) component?.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                Refused(param, refused, where, what));
+
             return tree;
+        }
+
+        /// <summary>
+        /// What the component says about items a tree input could not give the script. One line
+        /// per parameter however many items it was, naming the first, because a branch of two
+        /// hundred points aimed at a Curve would otherwise fill the canvas with the same sentence.
+        /// </summary>
+        static string Refused(ScriptParam param, int count, GH_Path where, string what)
+        {
+            var target = param.ElementType.Name;
+
+            return count == 1
+                ? param.Name + ": a " + what + " in branch " + where + " does not become a "
+                  + target + ", so it was left out."
+                : param.Name + ": " + count + " items do not become a " + target
+                  + " and were left out, the first a " + what + " in branch " + where + ".";
         }
 
         static void WriteOutput(IGH_DataAccess access, int index, ScriptParam param, object value)
