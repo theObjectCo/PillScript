@@ -39,8 +39,35 @@
     return (payload.sections || []).map(function (section) {
       return section.component + ':' + (section.widgets || []).map(function (w) {
         return w.kind + '.' + w.name;
-      }).join(',') + '|' + (section.problem || '');
+      }).join(',') + '|' + (section.problem || '') + '|' + (section.icon || '').length;
     }).join(';');
+  }
+
+  // The icon a component wears: the drawing it was given, or the pill. A Phosphor icon arrives as
+  // its own SVG and is put in as it stands, since it already paints itself in currentColor.
+  function badge(svg) {
+    if (svg) {
+      var held = document.createElement('div');
+      held.innerHTML = svg;
+
+      var drawing = held.querySelector('svg');
+      if (drawing) {
+        drawing.setAttribute('class', 'glyph');
+        drawing.removeAttribute('width');
+        drawing.removeAttribute('height');
+        return drawing;
+      }
+    }
+
+    var pill = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    pill.setAttribute('viewBox', '0 0 24 24');
+    pill.setAttribute('class', 'glyph');
+
+    var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#icPill');
+    pill.appendChild(use);
+
+    return pill;
   }
 
   function head(section) {
@@ -50,13 +77,7 @@
     chevron.setAttribute('class', 'chevron');
     node.appendChild(chevron);
 
-    var pill = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    pill.setAttribute('viewBox', '0 0 24 24');
-    pill.setAttribute('class', 'glyph');
-    var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    use.setAttribute('href', '#icPill');
-    pill.appendChild(use);
-    node.appendChild(pill);
+    node.appendChild(badge(section.icon));
 
     node.appendChild(SP.el('span', 'title', section.title || 'Script'));
     node.appendChild(SP.el('div', 'spacer'));

@@ -80,6 +80,7 @@ namespace PillScript.Panel
                     component = component.InstanceGuid.ToString(),
                     title = lead != null ? lead.Label : Title(component),
                     mark = Mark(component),
+                    icon = component.IconSvg,
                     collapsed = component.IsCollapsed,
                     problem,
                     widgets = controls.Skip(lead == null ? 0 : 1)

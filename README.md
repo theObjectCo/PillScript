@@ -192,7 +192,31 @@ by cascade order rather than by specificity. That styling is not scoped to the s
 from. A `ui.css` in one script restyles the whole panel, including the sections other components
 published, which is worth knowing before writing one.
 
-## An example to open
+## The icon a component wears
+
+Phosphor icon in the component's menu takes any name from https://phosphoricons.com: `gear-six`,
+`flask`, `waves-bold`, `heart-fill`. The same drawing goes on the canvas and at the head of the
+component's section in the panel, which is what makes a panel of four scripts readable without
+reading it. Leaving the name empty gives the pill back.
+
+Nine thousand drawings are too many to carry in a plugin, so an icon is fetched the first time a
+name is used and kept under `%LOCALAPPDATA%\PillScript\icons` from then on. A definition opened on
+a machine that has never seen that icon and has no way onto the internet wears the pill and says
+nothing; the name stays written down, and the icon appears whenever the fetch can happen. Phosphor
+is MIT licensed and nothing from it is redistributed here.
+
+## Two examples to open
+
+`examples/perforated-sheet.gh` is a sheet of holes with nothing on the canvas to drive it. Every
+control is registered in `RegisterUi` and drawn in the panel: the two sizes, the spacing, the hole,
+the pattern, whether the holes are round, and then a colour, a layer and a button that bakes the
+result into Rhino. One component, one file, no sliders.
+
+![The perforated sheet example, its controls in the Rhino panel](examples/perforated-sheet.png)
+
+It is worth pressing Bake to Rhino twice to see what a button means here: it is true for the one
+solve the press caused, so two presses bake two copies, and dragging a slider afterwards bakes
+nothing.
 
 `examples/diffusion-limited-aggregation.gh` grows a dendrite by sending particles in one at a
 time from a circle outside the cluster and freezing each one where it first comes within reach of

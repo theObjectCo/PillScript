@@ -169,6 +169,9 @@ body { display: flex; flex-direction: column; }
 
 .head:hover { background: var(--headLit); }
 
+/* The pill paints itself; an icon a component was given takes the colour from here. */
+.head > .glyph { color: var(--ink); }
+
 .head .title {
   font-weight: 600;
   color: var(--inkTitle);

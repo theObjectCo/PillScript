@@ -60,7 +60,6 @@ namespace PillScript.Components
 
         public override GH_Exposure Exposure => GH_Exposure.primary;
 
-        protected override System.Drawing.Bitmap Icon => ComponentIcon.Bitmap;
 
         /// <summary>True while this component's editor window is up, which the canvas draws.</summary>
         internal bool IsEditorOpen => _editor != null;
@@ -239,6 +238,11 @@ namespace PillScript.Components
                 ? "Show this script's controls in the Rhino panel."
                 : "This script declares no controls yet: override RegisterUi and compile.";
 
+            var icon = Menu_AppendItem(menu, "Phosphor icon...", (_, __) => AskForIcon());
+            icon.ToolTipText = _iconName == null
+                ? "Wear any icon from phosphoricons.com instead of the pill."
+                : "Wearing " + _iconName + ". Empty the name to go back to the pill.";
+
             Menu_AppendItem(menu, "Open project folder", (_, __) =>
             {
                 _watcher.Mirror();
@@ -253,6 +257,7 @@ namespace PillScript.Components
             writer.SetGuid("ProjectId", Project.Id);
             writer.SetBoolean("CompileOnLoad", CompileOnLoad);
             writer.SetBoolean("Published", IsPublished);
+            if (_iconName != null) writer.SetString("PhosphorIcon", _iconName);
 
             WriteUi(writer);
             writer.SetInt32("FileCount", Project.Files.Count);
@@ -275,6 +280,9 @@ namespace PillScript.Components
 
             if (reader.ItemExists("Published"))
                 IsPublished = reader.GetBoolean("Published");
+
+            if (reader.ItemExists("PhosphorIcon"))
+                _iconName = Icons.PhosphorIcons.Clean(reader.GetString("PhosphorIcon"));
 
             ReadUi(reader);
 

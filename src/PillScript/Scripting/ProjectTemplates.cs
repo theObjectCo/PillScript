@@ -257,6 +257,14 @@ Rhino and Grasshopper are not listed in it. They arrive through `Directory.Build
 is regenerated for whichever Rhino is running, and that is what keeps the project file free of
 paths that work on only one machine.
 
+## The icon
+
+**Phosphor icon** in the component's menu takes any name from phosphoricons.com, say `gear-six`,
+`flask` or `waves-bold`. That drawing then stands on the canvas and at the head of this script's
+section in the panel. An empty name gives the pill back. The icon is fetched once and kept on
+disk, so it costs nothing after the first time and nothing at all offline, where the pill stands
+in until the fetch can happen.
+
 ## Keys
 
 - `F5` or `Ctrl-B` compile
