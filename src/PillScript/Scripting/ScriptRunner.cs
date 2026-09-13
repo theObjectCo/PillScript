@@ -42,7 +42,10 @@ namespace PillScript.Scripting
             Action<string> print)
         {
             var signature = script.Signature;
-            var instance = script.NewInstance();
+
+            // The same instance every time, so what a script puts in a field is still there on the
+            // next call. What belongs to this one call is handed to it below.
+            var instance = script.Instance;
 
             if (instance is ScriptBase scripted)
             {

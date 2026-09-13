@@ -102,33 +102,37 @@ Every solve calls `RunScript`, and it calls it once per iteration rather than on
 a list of three numbers into an input declared as a single value and the method runs three times,
 with `Iteration` counting 0, 1, 2.
 
-The instance is made fresh for each of those calls, so a field on the script class is useless for
-carrying anything: it starts at its initial value every time, not once per solve.
-
-A `static` field does survive. It lives in the compiled assembly, which outlives any one call, so
-it carries across iterations and across solves. Counting calls with one shows it plainly:
+The script class is made into an object once per build, and every one of those calls runs on that
+same object, which is how the C# component Grasshopper ships behaves. So a field carries from one
+call to the next, and a field initialiser runs once rather than on every iteration:
 
 ```csharp
 public class Script : ScriptBase
 {
-    static int calls;   // 1, 2, 3, 4 ... across every run
-    int mine;           // 1 every time
+    int calls;                              // 1, 2, 3, 4 ... across iterations and solves
+    List<int> seen = new List<int>();       // built once, and it keeps growing
 
-    public void RunScript(out string state)
+    public void RunScript(int n, out string state)
     {
         calls++;
-        mine++;
-        state = calls + " calls, instance at " + mine;
+        seen.Add(n);
+        state = calls + " calls, " + seen.Count + " values seen";
     }
 }
 ```
 
-Two things about a static are worth knowing before leaning on one. It belongs to the component,
-not to the class: each component compiles its own assembly into its own load context, so two
-components running identical code keep separate counters. And it dies at the next compile, because
-compiling throws the old build away and unloads it, which is also what happens when a breakpoint is
-added or removed. So a static is a cache that survives solving and does not survive editing, which
-is usually what a cache should do.
+A `static` behaves the same way and for the same reason: both live for as long as the build does.
+
+Two things are worth knowing before leaning on either. They belong to the component, not to the
+class: each component compiles its own assembly into its own load context, so two components
+running identical source keep separate counters. And they die at the next compile, because
+compiling throws the old build away and unloads it, which is also what happens when a breakpoint
+is added or removed.
+
+So state here survives solving and does not survive editing, which is usually what a cache should
+do. The trap is the same one the built-in component has: a field that collects something grows on
+every iteration, not every solve, and nothing empties it until the next compile. `Iteration == 0`
+is the moment to clear it if what you want is one solve's worth.
 
 ## An example to open
 
