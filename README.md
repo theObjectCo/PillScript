@@ -1,6 +1,6 @@
 # PillScript
 
-A C# script component for Grasshopper in Rhino 8. What it adds over the built-in one:
+PillScript is a C# script component for Grasshopper in Rhino 8. What it adds over the built-in one:
 
 - a Monaco editor with Roslyn behind it
 - compilation on demand, not on every keystroke
@@ -15,7 +15,7 @@ with output, problems and variables, and a status bar. Rhino owns the window, so
 canvas and hides with it instead of floating over the whole screen.
 
 Two buttons at the foot of the rail dock the editor to the left or the right of the canvas.
-Pressing the side it already sits on turns it back into a separate window. A third button below
+Pressing the side it already sits on undocks it into a separate window. A third button below
 them moves the canvas to the component the editor belongs to and selects it, taking about half a
 second to travel and landing in the middle of whatever strip of canvas is still visible. The
 movement is animated so that the direction stays readable.
@@ -126,9 +126,9 @@ public class Script : ScriptBase
 
 A `static` behaves the same way, since both live as long as the build does.
 
-Two things are worth knowing before leaning on either. They belong to the component, not to the
-class: each component compiles its own assembly into its own load context, so two components
-running identical source keep separate counters. They also die at the next compile, which throws
+Two things are worth knowing before leaning on either. They belong to the component. Each component
+compiles its own assembly into its own load context, so two components running identical source keep
+separate counters. They are also discarded at the next compile, which throws
 the old build away and unloads it. Adding or removing a breakpoint has the same effect.
 
 State here survives solving and does not survive editing. The trap is the same one the built-in
@@ -175,7 +175,7 @@ touched. The bar at the foot of the panel reports the duration of the last solve
 red if the script threw.
 
 A button is true for the one solve its press caused and false on every other solve. Dragging a
-slider produces one solve after the dragging stops, not one per pixel.
+slider produces one solve after the dragging stops instead of one per pixel.
 
 The control kinds: `Slider` for a number between bounds, `Number` and `Whole` for one typed in,
 `Toggle` for a switch, `Choice` for one of a list, `Text` for a line to type, `Vector` for three
@@ -248,7 +248,8 @@ assembly, and there is no file to open for it.
 Click the gutter, or press F9, to mark a line. The marks are compiled into the script: Roslyn
 rewrites the tree and puts a call in front of each marked statement, carrying the locals that are
 definitely assigned at that point. When the solve reaches one it stops and the editor shows the
-values. Rhino stays responsive because the wait is a nested message loop, not a blocked thread.
+values. Rhino stays responsive because the wait runs a nested message loop instead of blocking
+the thread.
 Continue lets the script finish, Stop abandons that solve.
 
 The pauses are part of the build, so moving a breakpoint makes the component stale. The breakpoint
@@ -262,7 +263,7 @@ click menu. Between an edit and the next compile the component is outlined in bl
 running the previous build, so a half-written script does not break a definition that was working.
 
 A component compiles once when the document opens, which restores a saved definition to a running
-state. This can be turned off per component.
+state, and this can be turned off per component.
 
 ## The project on disk
 
@@ -351,7 +352,7 @@ little else, because Rhino 8 accepts a Windows Forms control here and then never
 
 ## Licence
 
-MIT, in `LICENSE` at the root.
+The licence is MIT, in `LICENSE` at the root.
 
 The `src/PillScript/Editor/web/vs` folder is the Monaco Editor 0.56.0, redistributed unchanged
 under its own MIT licence, with the notice kept alongside it in that folder. JetBrains Mono, in

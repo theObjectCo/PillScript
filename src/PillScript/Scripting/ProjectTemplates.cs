@@ -131,7 +131,7 @@ wrong.
 
 ## Compiling
 
-Nothing compiles until you ask. Press `F5` or `Ctrl-B`. Until then the component keeps running its
+Nothing compiles on its own. Press `F5` or `Ctrl-B`. Until then the component keeps running its
 last build and shows a coloured plate on the canvas to mark it as out of date.
 
 `Ctrl-S` saves without building. Saving happens on its own a moment after typing stops anyway.
@@ -141,8 +141,8 @@ last build and shows a coloured plate on the canvas to mark it as out of date.
 `RunScript` is called once per item, not once per solve. Send a list of three numbers into an input
 declared as a single value and it runs three times, with `Iteration` counting 0, 1, 2.
 
-The class is turned into an object once per build, and all those calls run on that same object. A
-field therefore keeps its value from one call to the next, and a field initialiser runs once:
+The class becomes an object once per build, and all those calls run on that same object. A field
+therefore still holds its value on the next call, and a field initialiser runs once:
 
 ```csharp
 int calls;                          // 1, 2, 3, 4 ... across iterations and solves
@@ -154,8 +154,8 @@ Compiling throws the build away and takes them with it, which is also what happe
 breakpoint is added or removed.
 
 The trap is that a field collecting something grows on every iteration, not every solve, and
-nothing empties it until the next compile. `Iteration == 0` is the moment to clear it if what you
-want is one solve's worth.
+nothing empties it until the next compile. Clearing it while `Iteration == 0` keeps the contents
+to a single solve.
 
 ## Controls in the Rhino panel
 
@@ -222,11 +222,12 @@ its `label` and, for numbers, a `.reading`. The rest are `.caption`, `.field`, `
 to one script. A `ui.css` restyles the whole panel, including the sections other components
 published.
 
-## What ScriptBase gives you
+## What ScriptBase provides
 
 - `Print(...)` writes to the output pane and to the component's `out` parameter
 - `Warning(...)`, `Error(...)` and `Remark(...)` put a bubble on the component
-- `Component`, `RhinoDocument` and `Iteration` say where you are
+- `Component`, `RhinoDocument` and `Iteration` identify the component, the Rhino document and the
+  current iteration
 
 ## More files
 
@@ -239,7 +240,7 @@ live in the folder beside the sources and travel inside the Grasshopper document
 files larger than a megabyte are not taken into the document; one placed in the folder by hand
 stays there and is left alone.
 
-`Script.cs`, `Script.csproj` and `GlobalUsings.cs` cannot be renamed or deleted. This file can.
+`Script.cs`, `Script.csproj` and `GlobalUsings.cs` cannot be renamed or deleted; this readme can.
 
 ## Packages and references
 
@@ -254,7 +255,7 @@ paths that work on only one machine.
 
 ## The icon
 
-**Phosphor icon** in the component's menu takes any name from phosphoricons.com, for example
+**Phosphor icon** in the component's menu takes any name from https://phosphoricons.com, for example
 `gear-six`, `flask` or `waves-bold`. Type it on the line in the menu and press Enter. The drawing
 is then used on the canvas and at the head of this script's section in the panel. An empty name
 restores the pill. Each icon is fetched once and kept on disk. Without a route to the internet the
