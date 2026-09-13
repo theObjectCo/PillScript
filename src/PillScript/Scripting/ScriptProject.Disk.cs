@@ -13,6 +13,9 @@ namespace PillScript.Scripting
     /// </summary>
     internal sealed partial class ScriptProject
     {
+        /// <summary>Past this a file belongs on disk, not inside the document.</summary>
+        const long LargestFile = 1024 * 1024;
+
         /// <summary>Folder the project is mirrored into, and where packages are restored.</summary>
         public string WorkingFolder => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -59,11 +62,48 @@ namespace PillScript.Scripting
             return Hash != before;
         }
 
-        /// <summary>The project's own files, leaving out generated ones and build output.</summary>
+        /// <summary>
+        /// The project's own files: whatever sits in the folder itself, less the generated ones.
+        /// Build output is left out by only looking at the top level, since that all lives in
+        /// obj and bin.
+        /// </summary>
         static IEnumerable<string> EnumerateProjectFiles(string folder)
-            => Directory.EnumerateFiles(folder, "*.cs", SearchOption.TopDirectoryOnly)
-                .Concat(Directory.EnumerateFiles(folder, "*.csproj", SearchOption.TopDirectoryOnly))
-                .Where(path => !Generated.Contains(Path.GetFileName(path)));
+            => Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
+                .Where(path => !Generated.Contains(Path.GetFileName(path)))
+                .Where(CanCarry);
+
+        /// <summary>
+        /// Whether a file can live inside the document. Everything here is held and mirrored as
+        /// text, so something that is not text would come back mangled, and a referenced DLL put
+        /// beside the project is exactly the kind of thing that would be. Anything this refuses is
+        /// left alone on disk rather than read in or deleted.
+        /// </summary>
+        static bool CanCarry(string path)
+        {
+            try
+            {
+                var length = new FileInfo(path).Length;
+                if (length > LargestFile) return false;
+
+                using var stream = File.OpenRead(path);
+
+                var block = new byte[(int)Math.Min(length, 4096)];
+                var read = stream.Read(block, 0, block.Length);
+
+                // A zero byte this early is what tells an assembly from a source file.
+                for (var i = 0; i < read; i++)
+                {
+                    if (block[i] == 0) return false;
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                // Locked, or gone between listing and opening. Either way, not ours to carry.
+                return false;
+            }
+        }
 
         /// <summary>
         /// Leaves a file alone when it already says this, so the timestamps an IDE and the SDK

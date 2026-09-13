@@ -74,31 +74,8 @@ global using PillScript;
         /// what lives between runs. It is the first thing anybody opening the editor reads, and
         /// the only place they are told any of it.
         /// </summary>
-        public const string Source = @"// Where this component's parameters come from: every RunScript parameter below is an
-// input, every out parameter an output, in the order written. The type picks the
-// Grasshopper parameter and how the data arrives. A List<T> or T[] makes it a list, a
-// DataTree<T> or GH_Structure<T> a tree, anything else one value.
-//
-// Attributes fill in the rest, all optional. [Name(""R"")] is the short name shown on the
-// component, [Description(""..."")] the tooltip, [Default(10.0)] a value to use when
-// nothing is connected, [Optional] permission to be left empty. A plain C# default says
-// what [Default] says: double radius = 10.0.
-//
-// The compiler wants one public class with a public RunScript, a parameterless
-// constructor, at least one out parameter, and no two parameters sharing a name.
-//
-// Nothing is compiled until asked: F5 or Ctrl-B. Until then the component runs the build
-// it already has and wears a plate on the canvas. F9 sets a breakpoint, F12 goes to a
-// declaration, Shift-F12 finds every use, F2 renames across files. More files: + in the
-// sidebar.
-//
-// RunScript runs once per item rather than once per solve, and Iteration counts them. The
-// class becomes an object once per build and every call runs on that object, so a field
-// keeps what you put in it between calls, until the next compile clears it.
-//
-// From ScriptBase: Print writes to the output pane and the out parameter; Warning, Error
-// and Remark put a bubble on the component; Component, RhinoDocument and Iteration say
-// where you are.
+        public const string Source = @"// The parameters of this component are read out of the RunScript signature below.
+// readme.md, in the sidebar, says how that works and what else the editor can do.
 
 public class Script : ScriptBase
 {
@@ -115,6 +92,111 @@ public class Script : ScriptBase
         Print(""Circumference: {0:F2}"", result.Circumference);
     }
 }
+";
+
+        /// <summary>
+        /// The documentation, as a file in the project rather than a wall of comment at the top
+        /// of Script.cs. It is where somebody who has just opened the editor is told how any of
+        /// this works, so it is the one template worth keeping long.
+        /// </summary>
+        public const string Readme = @"# This script
+
+The component on the canvas takes its shape from the code in this folder. Edit, press Compile,
+and its inputs and outputs become whatever the `RunScript` signature says they are.
+
+## Inputs and outputs
+
+Every parameter of `RunScript` is an input. Every `out` parameter is an output. They appear in
+the order they are written, and the type decides which Grasshopper parameter carries them and
+how the data arrives.
+
+- `double radius` is one value
+- `List<Point3d> corners` is a list, and `Point3d[]` does the same
+- `DataTree<Curve> curves` is a tree, and `GH_Structure<IGH_Goo>` does the same
+
+Four attributes fill in the rest, all of them optional.
+
+- `[Name(""R"")]` sets the short name shown on the component, which is otherwise the parameter name
+- `[Description(""..."")]` sets the tooltip
+- `[Default(10.0)]` gives a value to use when nothing is connected, and makes the input optional
+- `[Optional]` lets the input be left empty with nothing to fall back on
+
+A plain C# default says what `[Default]` says: `double radius = 10.0`.
+
+## What the compiler wants
+
+One public class with a public `RunScript` method, a parameterless constructor, at least one
+`out` parameter, and no two parameters sharing a name. Anything else is an error naming what is
+wrong.
+
+## Compiling
+
+Nothing is compiled until you ask for it. Press `F5` or `Ctrl-B`. Until then the component goes
+on running the build it already has, and wears a coloured plate on the canvas to say the sources
+have moved past it.
+
+`Ctrl-S` saves without building. Saving happens on its own a moment after typing stops anyway.
+
+## What survives between runs
+
+`RunScript` is called once per item rather than once per solve. Send a list of three numbers into
+an input declared as a single value and it runs three times, with `Iteration` counting 0, 1, 2.
+
+The class is turned into an object once per build, and every one of those calls runs on that same
+object. So a field keeps what you put in it from one call to the next, and a field initialiser
+runs once rather than on every iteration:
+
+```csharp
+int calls;                          // 1, 2, 3, 4 ... across iterations and solves
+List<int> seen = new List<int>();   // built once, and it keeps growing
+```
+
+A `static` behaves the same way and for the same reason: both live as long as the build does.
+Compiling throws the build away and takes them with it, which is also what happens when a
+breakpoint is added or removed.
+
+The trap is that a field collecting something grows on every iteration, not every solve, and
+nothing empties it until the next compile. `Iteration == 0` is the moment to clear it if what you
+want is one solve's worth.
+
+## What ScriptBase gives you
+
+- `Print(...)` writes to the output pane and to the component's `out` parameter
+- `Warning(...)`, `Error(...)` and `Remark(...)` put a bubble on the component
+- `Component`, `RhinoDocument` and `Iteration` say where you are
+
+## More files
+
+Add one with `+` in the sidebar. Every `.cs` file here compiles together, so a class in one is
+visible from another with no `using` needed. `GlobalUsings.cs` holds the namespaces every file
+starts with; add a line there rather than repeating a `using` in each file.
+
+A file may be anything, not only C#: notes, a json table to read at run time, a shader. They all
+live in the folder beside the sources and travel inside the Grasshopper document with it. What
+they may not be is binary or larger than a megabyte, and a file like that put in the folder by
+hand is left where it is rather than swallowed.
+
+`Script.cs`, `Script.csproj` and `GlobalUsings.cs` cannot be renamed or deleted. This file can.
+
+## Packages and references
+
+`Script.csproj` is a real project file, and the folder it sits in opens in an IDE. Add a NuGet
+package there, or use the References window in the editor, which edits the same file. A DLL goes
+in as a `Reference` with a `HintPath`, and a library kept beside the script as a
+`ProjectReference`, built before the script that needs it.
+
+Rhino and Grasshopper are not listed in it. They arrive through `Directory.Build.targets`, which
+is regenerated for whichever Rhino is running, and that is what keeps the project file free of
+paths that work on only one machine.
+
+## Keys
+
+- `F5` or `Ctrl-B` compile
+- `Ctrl-S` save
+- `F9` breakpoint on this line
+- `F12` go to declaration
+- `Shift-F12` find every use
+- `F2` rename, across every file at once
 ";
 
         /// <summary>

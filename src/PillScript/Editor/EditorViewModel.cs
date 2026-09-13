@@ -52,7 +52,7 @@ namespace PillScript.Editor
         }
 
         public void AddFile(string name)
-            => Mutate(Project.AddFile(name, out var error) ? null : error);
+            => Mutate(Project.AddFile(name, out var error) == null ? error : null);
 
         public void RenameFile(string from, string to)
             => Mutate(Project.RenameFile(from, to, out var error) ? null : error);

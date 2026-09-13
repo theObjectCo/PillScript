@@ -18,7 +18,14 @@ namespace PillScript.Scripting
         public string Name { get; set; }
         public string Content { get; set; }
 
+        /// <summary>Only these are compiled. A note or the project file is not.</summary>
         public bool IsSource => Name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Only C# is named, because that one is ours. Everything else is left for Monaco to work
+        /// out from the extension, which saves keeping a list of them here.
+        /// </summary>
+        public string Language => IsSource ? "csharp" : string.Empty;
     }
 
     /// <summary>
@@ -32,6 +39,7 @@ namespace PillScript.Scripting
         public const string DefaultEntry = "Script.cs";
         public const string ProjectFile = "Script.csproj";
         public const string UsingsFile = "GlobalUsings.cs";
+        public const string ReadmeFile = "readme.md";
 
         const string GeneratedTargets = "Directory.Build.targets";
 
@@ -47,6 +55,10 @@ namespace PillScript.Scripting
             _files.Add(new ScriptFile(DefaultEntry, ProjectTemplates.Source));
             _files.Add(new ScriptFile(UsingsFile, ProjectTemplates.Usings));
             _files.Add(new ScriptFile(ProjectFile, ProjectTemplates.Project));
+
+            // Not put back by EnsureProjectFile: the build does not need it, so somebody who
+            // deletes it meant to.
+            _files.Add(new ScriptFile(ReadmeFile, ProjectTemplates.Readme));
         }
 
         public Guid Id { get; set; }
@@ -94,17 +106,27 @@ namespace PillScript.Scripting
             else file.Content = content ?? string.Empty;
         }
 
-        /// <summary>Adds an empty source file. Returns false when the name is taken or unusable.</summary>
-        public bool AddFile(string name, out string error)
+        /// <summary>
+        /// Adds an empty file and answers it, or null with a reason. It answers the file rather
+        /// than a flag because the name it ends up with need not be the name that was asked for:
+        /// a bare name gains an extension.
+        /// </summary>
+        public ScriptFile AddFile(string name, out string error)
         {
             error = null;
             name = Normalise(name);
 
-            if (name == null) { error = "A file name must be a plain name ending in .cs"; return false; }
-            if (Find(name) != null) { error = name + " already exists."; return false; }
+            if (name == null) { error = "A file name cannot be a path, and cannot be a second .csproj."; return null; }
+            if (Find(name) != null) { error = name + " already exists."; return null; }
 
-            _files.Add(new ScriptFile(name, "// " + name + Environment.NewLine));
-            return true;
+            var seed = name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                ? "// " + name + Environment.NewLine
+                : string.Empty;
+
+            var file = new ScriptFile(name, seed);
+            _files.Add(file);
+
+            return file;
         }
 
         public bool RenameFile(string from, string to, out string error)
@@ -135,7 +157,11 @@ namespace PillScript.Scripting
             return true;
         }
 
-        /// <summary>Rejects paths and anything that is not a C# file, so the mirror stays flat.</summary>
+        /// <summary>
+        /// A file may be anything; what it may not be is somewhere else. Rejecting a path is what
+        /// keeps the mirror flat, which is what lets a name stand for a file without ambiguity.
+        /// A bare name with no extension at all becomes C#, since that is what it usually meant.
+        /// </summary>
         static string Normalise(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return null;
@@ -143,10 +169,11 @@ namespace PillScript.Scripting
 
             if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
             if (name != Path.GetFileName(name)) return null;
-            if (name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)) return null;
-            if (!name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) name += ".cs";
 
-            return name;
+            // One project file, and it is the one already here.
+            if (name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)) return null;
+
+            return Path.GetExtension(name).Length == 0 ? name + ".cs" : name;
         }
 
         /// <summary>A copy to compile or restore on another thread while editing carries on here.</summary>

@@ -34,7 +34,7 @@ namespace PillScript.Editor
                 {
                     name = file.Name,
                     content = file.Content,
-                    language = file.IsSource ? "csharp" : "xml",
+                    language = file.Language,
                     locked = ScriptProject.IsProtected(file.Name)
                 }),
                 folder = component.Project.WorkingFolder,

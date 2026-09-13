@@ -92,17 +92,22 @@ namespace PillScript.Bridge
         static object WriteFile(JsonElement arguments)
         {
             var component = Find(arguments);
-            var name = BridgeLookup.Text(arguments, "file");
+            var asked = BridgeLookup.Text(arguments, "file");
 
-            if (component.Project.Find(name) == null
-                && !component.Project.AddFile(name, out var error))
-                throw new InvalidOperationException(error);
+            // The name a new file ends up with need not be the one asked for, so the answer says
+            // which file was actually written.
+            var file = component.Project.Find(asked);
 
-            component.Project.SetContent(
-                component.Project.Find(name).Name, BridgeLookup.Text(arguments, "content"));
+            if (file == null)
+            {
+                file = component.Project.AddFile(asked, out var error);
+                if (file == null) throw new InvalidOperationException(error);
+            }
+
+            component.Project.SetContent(file.Name, BridgeLookup.Text(arguments, "content"));
 
             component.AfterProjectChanged();
-            return new { ok = true, file = name };
+            return new { ok = true, file = file.Name };
         }
 
         // ----- references ------------------------------------------------------------------------

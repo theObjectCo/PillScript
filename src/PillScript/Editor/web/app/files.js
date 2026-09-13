@@ -68,7 +68,9 @@
       return;
     }
 
-    var language = file.language === 'xml' ? 'xml' : SS.csharpId();
+    // Only C# is named, because that one is ours. Leaving the language out for the rest lets
+    // Monaco pick it from the file name, which is how a .md or a .json arrives coloured.
+    var language = file.language === 'csharp' ? SS.csharpId() : undefined;
 
     var model = state.monaco.editor.createModel(
       file.content, language, state.monaco.Uri.parse('inmemory://script/' + file.name));
