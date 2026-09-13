@@ -9,12 +9,12 @@ namespace PillScript.Scripting
     ///
     /// A working folder is a mirror: the files themselves are kept in the Grasshopper document, so
     /// a folder is worth no more than the restore sitting in it. One nobody has compiled from in a
-    /// month is a cache for a definition that has probably moved on, and the next compile writes
-    /// it back anyway. They are swept once, as Grasshopper loads, on a thread of their own.
+    /// week is a cache for a definition that has moved on, and the next compile writes it back
+    /// anyway. They are swept once, as Grasshopper loads, on a thread of their own.
     /// </summary>
     internal static class ProjectCache
     {
-        static readonly TimeSpan Stale = TimeSpan.FromDays(30);
+        static readonly TimeSpan Stale = TimeSpan.FromDays(7);
 
         public static string Root => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
