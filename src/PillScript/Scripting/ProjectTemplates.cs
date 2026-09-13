@@ -249,7 +249,14 @@ paths that work on only one machine.
             if (rhinoFolder == null) yield break;
 
             yield return Path.Combine(rhinoFolder, "Rhino.UI.dll");
+
+            // Eto does not sit with the others. RhinoCommon loads out of the netcore folder inside
+            // System, while Eto.dll stays in System itself, one above it. Which folder holds it is
+            // a detail of how Rhino is put together, so both are asked and whichever answers wins.
             yield return Path.Combine(rhinoFolder, "Eto.dll");
+
+            var above = Path.GetDirectoryName(rhinoFolder);
+            if (above != null) yield return Path.Combine(above, "Eto.dll");
         }
     }
 }
