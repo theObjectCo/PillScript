@@ -238,10 +238,7 @@ namespace PillScript.Components
                 ? "Show this script's controls in the Rhino panel."
                 : "This script declares no controls yet: override RegisterUi and compile.";
 
-            var icon = Menu_AppendItem(menu, "Phosphor icon...", (_, __) => AskForIcon());
-            icon.ToolTipText = _iconName == null
-                ? "Wear any icon from phosphoricons.com instead of the pill."
-                : "Wearing " + _iconName + ". Empty the name to go back to the pill.";
+            AppendIconItem(menu);
 
             Menu_AppendItem(menu, "Open project folder", (_, __) =>
             {

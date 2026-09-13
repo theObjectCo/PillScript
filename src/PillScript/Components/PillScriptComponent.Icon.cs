@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using Grasshopper;
 using Grasshopper.Kernel;
 using PillScript.Icons;
@@ -97,21 +98,29 @@ namespace PillScript.Components
         }
 
         /// <summary>
-        /// Asks for a name and takes whatever is typed. Nothing here knows which names exist, and
-        /// the set has nine thousand of them: one that turns out not to exist leaves the pill and
-        /// stays written down, so a typo is fixed by editing it rather than by guessing again.
+        /// A line to type the name on, in the menu itself. Nothing here knows which names exist,
+        /// and the set has nine thousand of them: one that turns out not to exist leaves the pill
+        /// and stays written down, so a typo is fixed by editing it rather than by guessing again.
+        ///
+        /// Taken on Enter rather than on every keystroke, since each new name is a fetch. The menu
+        /// is not locked while the box has focus: locking it adds Commit and Cancel items of
+        /// Grasshopper's own, and Commit turned out not to reach this handler at all.
         /// </summary>
-        void AskForIcon()
+        void AppendIconItem(ToolStripDropDown menu)
         {
-            var asked = Rhino.UI.Dialogs.ShowEditBox(
-                "PillScript",
-                "Icon name from phosphoricons.com, for example gear-six, flask or waves-bold. "
-                + "Leave it empty for the pill.",
-                _iconName ?? string.Empty,
-                false,
-                out var typed);
+            Menu_AppendItem(menu, "Phosphor icon").ToolTipText =
+                "A name from phosphoricons.com, for example gear-six, flask or waves-bold. "
+                + "Empty for the pill.";
 
-            if (asked) SetIconName(typed);
+            var box = Menu_AppendTextItem(menu, _iconName ?? string.Empty, (sender, key) =>
+            {
+                if (key.KeyCode != Keys.Return && key.KeyCode != Keys.Enter) return;
+
+                SetIconName(sender.Text);
+                menu.Close();
+            }, null, false);
+
+            box.ToolTipText = "Type a name and press Enter.";
         }
     }
 }
