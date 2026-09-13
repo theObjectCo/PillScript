@@ -25,17 +25,16 @@ namespace PillScript.Scripting
     }
 
     /// <summary>
-    /// The questions that are about a symbol rather than about a position: where it is declared,
-    /// everywhere it is used, and what changing its name would change. Roslyn answers all three
-    /// off the same workspace the completions come from, so what is offered and what is found
-    /// agree with each other.
+    /// The requests that concern a symbol instead of a position: where it is declared, everywhere
+    /// it is used, and what renaming it would change. All three run against the same workspace the
+    /// completions come from, so completion and navigation see the same code.
     /// </summary>
     internal sealed partial class ScriptLanguageService
     {
         /// <summary>
-        /// Where the thing under the caret is declared. Only the script's own files can be
-        /// answered for: a type out of RhinoCommon is declared in an assembly, not in a file
-        /// anybody here can be shown.
+        /// Where the symbol under the caret is declared. Only the script's own files can be
+        /// resolved: a type from RhinoCommon is declared in an assembly, and there is no file to
+        /// open for it.
         /// </summary>
         public Task<List<SourceSpan>> DefineAsync(string file, string text, int offset)
         {
@@ -48,7 +47,7 @@ namespace PillScript.Scripting
             }, new List<SourceSpan>());
         }
 
-        /// <summary>Everywhere the thing under the caret is used, its declaration included.</summary>
+        /// <summary>Everywhere the symbol under the caret is used, including its declaration.</summary>
         public Task<List<SourceSpan>> ReferencesAsync(string file, string text, int offset)
         {
             return WithDocument(file, text, async document =>
@@ -73,9 +72,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// What renaming the thing under the caret would change, as edits for the page to apply.
-        /// Roslyn renames into a solution of its own; the difference against the one we have is
-        /// what comes back, so the editor stays the only thing that writes to a file.
+        /// What renaming the symbol under the caret would change, as edits for the page to apply.
+        /// Roslyn produces a new solution, and the difference against the current one is what is
+        /// returned, which leaves the editor as the only writer of files.
         /// </summary>
         public Task<List<SourceEdit>> RenameAsync(string file, string text, int offset, string name)
         {
@@ -119,9 +118,9 @@ namespace PillScript.Scripting
                 .ToList();
 
         /// <summary>
-        /// Names the file a location is in by asking the solution which document holds the tree.
-        /// The path on the location itself is empty here, because these documents were added to
-        /// the workspace by name and never had one.
+        /// Finds the file a location belongs to by asking the solution which document holds the
+        /// tree. The path on the location is empty here, since these documents were added to the
+        /// workspace by name and never had one.
         /// </summary>
         static SourceSpan Span(Solution solution, Location location)
         {

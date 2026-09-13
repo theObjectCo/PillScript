@@ -6,7 +6,7 @@ using PillScript.Scripting;
 
 namespace PillScript.Editor
 {
-    /// <summary>What the view model uses to reach the page. The bridge provides it.</summary>
+    /// <summary>How the view model reaches the page. The bridge implements it.</summary>
     internal interface IEditorChannel
     {
         void Post(object payload);
@@ -20,9 +20,9 @@ namespace PillScript.Editor
     }
 
     /// <summary>
-    /// Everything the editor can do to a component, with no window, no WebView2 and no Win32 in
-    /// sight. The view calls in here; this calls into the scripting model and tells the page when
-    /// something changed.
+    /// Everything the editor can do to a component, with no window, no WebView2 and no Win32
+    /// involved. The view calls in here, and this calls into the scripting model and notifies the
+    /// page when something changed.
     /// </summary>
     internal sealed class EditorViewModel
     {
@@ -61,7 +61,7 @@ namespace PillScript.Editor
         public void DeleteFile(string name)
             => Mutate(Project.RemoveFile(name, out var error) ? null : error);
 
-        /// <summary>Applies a file operation and tells the page whether it took.</summary>
+        /// <summary>Applies a file operation and reports to the page whether it succeeded.</summary>
         void Mutate(string error)
         {
             if (error != null)
@@ -82,7 +82,7 @@ namespace PillScript.Editor
             Start(Project.WorkingFolder);
         }
 
-        /// <summary>Shows a file in Explorer, which is the quickest way to check what is referenced.</summary>
+        /// <summary>Shows a file in Explorer, which is the quickest way to inspect a reference.</summary>
         public void Reveal(string path)
         {
             if (string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path)) return;
@@ -147,7 +147,7 @@ namespace PillScript.Editor
             => Change(() => ProjectReferences.RemovePackage(Project, id));
 
         /// <summary>
-        /// Runs a change to the references and tells the component about it, so the editor, the
+        /// Applies a change to the references and notifies the component, so the editor, the
         /// mirror on disk and the next compile all see the same project file.
         /// </summary>
         object Change(Func<string> change)
@@ -162,9 +162,9 @@ namespace PillScript.Editor
         }
 
         /// <summary>
-        /// Resolves the references now rather than at the next compile, so the window can say
-        /// whether a package actually came down. The work happens off the UI thread: restoring
-        /// can take a while and the editor should stay usable while it does.
+        /// Resolves the references immediately instead of at the next compile, so the window can
+        /// report whether a package was actually downloaded. The work runs off the UI thread, since
+        /// a restore can take seconds and the editor stays usable meanwhile.
         /// </summary>
         public async Task<object> RestoreAsync()
         {

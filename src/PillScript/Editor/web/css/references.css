@@ -1,9 +1,9 @@
 /* ----- the references window -----
 
-   Three groups, weighted by how much attention each deserves. Packages come first and lead with
-   a search field, because looking one up is the common errand. Assemblies come second, with the
-   path on its own line so it stops competing with the name. What Rhino provides is folded away:
-   it is context, not something to act on. */
+   Three groups, weighted by how often each is used. Packages come first and lead with a search
+   field, since looking one up is the common task. Assemblies come second, with the path on its own
+   line so that it does not compete with the name. The list of what Rhino provides is collapsed,
+   since nothing there can be changed. */
 
 .modal {
   position: fixed;
@@ -85,7 +85,7 @@
 .ref-search input:focus { border-color: var(--accent); }
 .ref-search input::placeholder { color: var(--fg-faint); }
 
-/* Results hang under the field instead of pushing the lists about. */
+/* Results hang under the field instead of displacing the lists. */
 .ref-results {
   position: absolute;
   top: calc(100% + 4px);

@@ -108,7 +108,7 @@ namespace PillScript.Scripting
             }
             catch (Exception)
             {
-                // A default that does not fit the parameter is not worth failing a compile over.
+                // A default that does not fit the parameter is dropped, not failed over.
             }
         }
     }

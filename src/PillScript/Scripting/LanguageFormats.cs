@@ -26,8 +26,8 @@ namespace PillScript.Scripting
     }
 
     /// <summary>
-    /// Puts what Roslyn says into the shapes the editor reads: the icon names Monaco knows, a
-    /// readable method signature, the summary out of a documentation comment.
+    /// Converts Roslyn's output into the shapes the editor reads: the icon names Monaco knows, a
+    /// readable method signature, the summary from a documentation comment.
     /// </summary>
     internal static class LanguageFormats
     {
@@ -51,8 +51,8 @@ namespace PillScript.Scripting
             miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
         /// <summary>
-        /// A completion asked for by typing a character is a different question from one asked for
-        /// by pressing Ctrl-Space, and Roslyn answers each differently.
+        /// A completion triggered by typing a character is a different request from one triggered
+        /// by Ctrl-Space, and Roslyn returns different results for each.
         /// </summary>
         public static CompletionTrigger Trigger(string trigger)
             => string.IsNullOrEmpty(trigger)
@@ -77,8 +77,8 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// The summary line out of a documentation comment, flattened. Reading the XML by hand is
-        /// enough here: one element, shown as a single line of text.
+        /// The summary line from a documentation comment, flattened. Parsing the XML by hand is
+        /// enough for one element shown as a single line of text.
         /// </summary>
         public static string Summary(ISymbol symbol)
         {

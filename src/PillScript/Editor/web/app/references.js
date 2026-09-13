@@ -1,5 +1,5 @@
-// The references window: the packages and DLLs the script is built against, and what Rhino
-// already provides. Searching nuget.org for something new is in nuget.js.
+// The references window: the packages and DLLs the script is built against, and the assemblies
+// Rhino already provides. Searching nuget.org for a new one is in nuget.js.
 (function () {
   'use strict';
 
@@ -55,7 +55,7 @@
     });
   }
 
-  // Every change rewrites Script.csproj, so the answer is either nothing or a reason.
+  // Every change rewrites Script.csproj, so the answer is either empty or a reason.
   function change(type, payload) {
     return SS.request(type, payload).then(function (answer) {
       if (answer && answer.error) {
@@ -112,8 +112,8 @@
     });
   }
 
-  // The path goes on its own line: sharing one with the name it wins every time, and the name,
-  // which is what anybody actually reads, ends up squeezed.
+  // The path goes on its own line. On a shared line the path takes the width and squeezes the
+  // name, which is the part that gets read.
   function renderLocal(rows) {
     el['ref-local'].innerHTML = '';
     setCount('ref-local-count', rows.length);
@@ -156,8 +156,8 @@
     el['ref-host-toggle'].classList.toggle('open', !hidden);
   };
 
-  // Starts with the version that is set and fetches the rest the first time it is opened, so a
-  // window with ten packages does not make ten calls to nuget.org before anybody asks.
+  // Starts with the version that is set and fetches the rest when it is first opened, so a
+  // window listing ten packages does not make ten calls to nuget.org up front.
   function versionPicker(entry) {
     var select = document.createElement('select');
     var loaded = false;

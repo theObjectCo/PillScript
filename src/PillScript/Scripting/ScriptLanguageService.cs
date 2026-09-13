@@ -15,10 +15,9 @@ using Microsoft.CodeAnalysis.Text;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// A Roslyn workspace over one component's sources, answering the questions an editor asks
-    /// between compiles: what can be typed here, what is this, what are the arguments, and what is
-    /// already wrong. It holds the same references the compiler uses, so it never claims a type
-    /// exists that the build will then reject.
+    /// A Roslyn workspace over one component's sources. It serves the requests an editor makes
+    /// between compiles: completion, hover, signature help and diagnostics. It holds the same
+    /// references the compiler uses, so it never offers a type the build will then reject.
     /// </summary>
     internal sealed partial class ScriptLanguageService : IDisposable
     {
@@ -32,8 +31,8 @@ namespace PillScript.Scripting
         bool _stale = true;
 
         /// <summary>
-        /// Marks the workspace for a rebuild. Needed when the file set or the references change;
-        /// an edit inside a file goes through Update instead, which keeps Roslyn's cached work.
+        /// Marks the workspace for a rebuild, which is needed when the file set or the references
+        /// change. An edit inside a file goes through Update instead, keeping Roslyn's cached work.
         /// </summary>
         public void Invalidate(ScriptProject project)
         {
@@ -102,7 +101,7 @@ namespace PillScript.Scripting
             }, new List<CompletionEntry>());
         }
 
-        /// <summary>The documentation for one item, fetched only when the list highlights it.</summary>
+        /// <summary>The documentation for one item, fetched when the list highlights it.</summary>
         public async Task<string> DescribeCompletionAsync(
             string file, string text, int offset, string trigger, int index)
         {
@@ -167,8 +166,8 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Roslyn keeps its signature help internal, so this reads the invocation under the caret
-        /// and formats the candidate methods off the semantic model.
+        /// Roslyn's signature help is internal, so this reads the invocation under the caret and
+        /// formats the candidate methods from the semantic model.
         /// </summary>
         public async Task<(List<SignatureEntry> Signatures, int Active)> SignatureAsync(
             string file, string text, int offset)
@@ -241,7 +240,7 @@ namespace PillScript.Scripting
             }
             catch (Exception)
             {
-                // A language service that throws must not take the editor down with it.
+                // An exception from the language service must not bring the editor down.
                 return fallback;
             }
             finally

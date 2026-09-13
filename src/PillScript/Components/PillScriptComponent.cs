@@ -11,16 +11,16 @@ using PillScript.Scripting;
 namespace PillScript.Components
 {
     /// <summary>
-    /// A C# script component whose inputs and outputs come from the RunScript signature and whose
-    /// code is only compiled when asked. Between an edit and the next compile the component keeps
-    /// running the previous build and shows itself as stale.
+    /// A C# script component. Its inputs and outputs come from the RunScript signature, and the
+    /// code compiles only on request. Between an edit and the next compile the component runs the
+    /// previous build and draws itself as stale.
     ///
-    /// This file is the Grasshopper surface: parameters, solving, the menu and what is saved in
-    /// the document. Building the script is next door in PillScriptComponent.Build.cs.
+    /// This file holds the Grasshopper surface: parameters, solving, the menu and what goes into
+    /// the document. The build itself is in PillScriptComponent.Build.cs.
     /// </summary>
     public partial class PillScriptComponent : GH_Component, IGH_VariableParameterComponent
     {
-        /// <summary>The number of outputs that belong to the component rather than to the script.</summary>
+        /// <summary>The number of outputs the component owns. The rest come from the script.</summary>
         const int FixedOutputs = 1;
 
         /// <summary>How many printed lines are pushed to the editor before the rest are counted.</summary>
@@ -28,7 +28,7 @@ namespace PillScript.Components
 
         internal ScriptProject Project { get; } = new ScriptProject();
 
-        /// <summary>Roslyn over the same sources, answering the editor between compiles.</summary>
+        /// <summary>Roslyn over the same sources, serving editor requests between compiles.</summary>
         internal ScriptLanguageService Language { get; } = new ScriptLanguageService();
 
         readonly Dictionary<string, IReadOnlyList<int>> _breakpoints =
@@ -53,7 +53,7 @@ namespace PillScript.Components
 
         readonly string _givenNickName;
 
-        /// <summary>Whether the nickname is still the one every component of this kind starts with.</summary>
+        /// <summary>Whether the nickname is still the default every component of this kind gets.</summary>
         internal bool IsNamed => NickName != _givenNickName;
 
         public override Guid ComponentGuid => new Guid("7F4C0F1B-9E51-4A3E-9B1D-6C1A2E3D4F50");
@@ -61,7 +61,7 @@ namespace PillScript.Components
         public override GH_Exposure Exposure => GH_Exposure.primary;
 
 
-        /// <summary>True while this component's editor window is up, which the canvas draws.</summary>
+        /// <summary>True while this component's editor window is open. The canvas marks it.</summary>
         internal bool IsEditorOpen => _editor != null;
 
         /// <summary>Recompile as soon as the component joins a document, so a reopened file runs.</summary>
@@ -69,7 +69,7 @@ namespace PillScript.Components
 
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            // Inputs are whatever the compiled signature says they are.
+            // The compiled signature determines the inputs.
         }
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -84,9 +84,9 @@ namespace PillScript.Components
         bool _solveFailed;
 
         /// <summary>
-        /// Times the whole solve rather than one iteration, which is what the panel's status bar
-        /// is about: a script run over a list of two thousand takes what it takes, and the number
-        /// worth showing is that, not a two-thousandth of it.
+        /// Times the whole solve, not a single iteration. The panel's status bar reports this
+        /// number, and for a script run over a list of two thousand items the total is the figure
+        /// that matters.
         /// </summary>
         protected override void BeforeSolveInstance()
         {
@@ -108,8 +108,9 @@ namespace PillScript.Components
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            // Compile errors are raised outside any solution, so they are re-stated here; a
-            // component that only complained inside the editor would look merely stale.
+            // Compile errors are raised outside any solution, so they are restated here. Without
+            // this the canvas would show only the stale plate and the error would stay in the
+            // editor.
             foreach (var error in _diagnostics.Where(d => d.Severity == "error").Take(5))
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error,
@@ -142,14 +143,15 @@ namespace PillScript.Components
             DA.SetDataList(0, lines);
             Report(lines);
 
-            // A press lasts one solve. Cleared on the last iteration, so every iteration of the
-            // same solve sees it.
+            // A button press lasts one solve. Clearing happens on the last iteration so that
+            // every iteration of that solve still sees it.
             ReleaseButtons(registrar);
         }
 
         /// <summary>
-        /// Sends what the script printed to an open editor. Only worth doing while somebody is
-        /// looking, and capped, because a solve over a long list would otherwise bury the pane.
+        /// Sends what the script printed to an open editor. It runs only while the window is
+        /// open, and the number of lines is capped so a solve over a long list does not flood the
+        /// output pane.
         /// </summary>
         void Report(IReadOnlyList<string> lines)
         {
@@ -228,9 +230,9 @@ namespace PillScript.Components
                 CompileOnLoad = !CompileOnLoad;
             }, true, CompileOnLoad);
 
-            // Always offered, whether or not the script declares anything. Greying it out when
-            // there is nothing to show traps a component that was published and has since been
-            // edited: the tick stays on with no way to take it off.
+            // Enabled whether or not the script declares any controls. Disabling it when there is
+            // nothing to show would trap a component that was published and then edited: the tick
+            // stays on and cannot be cleared.
             var declared = Register().Controls.Count > 0;
 
             Menu_AppendItem(menu, "Publish to panel", (_, __) => SetPublished(!IsPublished),
@@ -300,8 +302,8 @@ namespace PillScript.Components
         }
 
         // ----- IGH_VariableParameterComponent ----------------------------------------------
-        // The signature owns the parameter list, so the zoomable interface offers no plus and
-        // minus and nothing is maintained by hand.
+        // The signature determines the parameter list, so the zoomable interface offers no plus
+        // and minus and none of these methods do any work.
 
         public bool CanInsertParameter(GH_ParameterSide side, int index) => false;
 

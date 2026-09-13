@@ -9,16 +9,15 @@ using PillScript.Components;
 namespace PillScript.Panel
 {
     /// <summary>
-    /// Gathers what the panel should show: every published component on the canvas, the controls
-    /// its RegisterUi declares, and the values they currently hold. The panel draws it; nothing
-    /// here knows how.
+    /// Collects what the panel shows: every published component on the active canvas, the
+    /// controls its RegisterUi declares, and the values they hold. Drawing happens in the web page.
     /// </summary>
     internal static class UiPublication
     {
         /// <summary>
-        /// Published components on the active canvas, in the order the panel was left in. One that
-        /// has never been dragged has no order of its own and falls in behind those that have, in
-        /// the order the document holds them.
+        /// Published components on the active canvas, in the order the panel was left in. A
+        /// section that has never been dragged has no stored position and follows the ones that
+        /// have, in document order.
         /// </summary>
         public static List<PillScriptComponent> Published()
         {
@@ -49,8 +48,8 @@ namespace PillScript.Panel
 
         /// <summary>
         /// What the page is sent: the sections to draw, the state of the last solve for the status
-        /// bar, and the stylesheets the published scripts carry, joined in document order so the
-        /// last one wins the same way a later rule does.
+        /// bar, and the stylesheets the published scripts carry, concatenated in document order so
+        /// that a later rule overrides an earlier one, as in any stylesheet.
         /// </summary>
         public static object Payload()
         {
@@ -68,9 +67,9 @@ namespace PillScript.Panel
 
                 var controls = registrar.Controls;
 
-                // A script that opens with a caption has named itself, and a heading saying C#
-                // over a line saying Outline says it twice. Renaming the component on the canvas
-                // takes the heading back, and the caption stays where it was written.
+                // A script whose first control is a caption has effectively named itself, and a
+                // heading reading C# above a caption reading Outline repeats it. Renaming the
+                // component on the canvas restores the heading and leaves the caption in place.
                 var lead = !component.IsNamed && controls.Count > 0 && controls[0].Kind == "caption"
                     ? controls[0]
                     : null;
@@ -101,8 +100,8 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// The status bar: how long the last solve took and whether it went through. With several
-        /// published scripts it is the slowest of them, since that is the one worth looking at.
+        /// The status bar: how long the last solve took and whether it completed. With several
+        /// published scripts the slowest of them is reported.
         /// </summary>
         static object Status(IEnumerable<PillScriptComponent> published)
         {
@@ -115,7 +114,7 @@ namespace PillScript.Panel
             };
         }
 
-        /// <summary>Full layer paths, as the Rhino document has them at this moment.</summary>
+        /// <summary>Full layer paths, read from the Rhino document at this moment.</summary>
         static List<string> Layers()
         {
             var document = Rhino.RhinoDoc.ActiveDoc;
@@ -128,9 +127,9 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// The section heading, which is the component's nickname, and the four characters of its
-        /// id beside it. The nickname of an untouched component is C#, so the mark is what tells
-        /// two of them apart until somebody renames one.
+        /// The section heading: the component's nickname, with four characters of its id beside
+        /// it. An untouched component is nicknamed C#, so the mark is what tells two of them apart
+        /// until one is renamed.
         /// </summary>
         static string Title(PillScriptComponent component)
             => string.IsNullOrWhiteSpace(component.NickName) ? component.Name : component.NickName;
@@ -139,8 +138,8 @@ namespace PillScript.Panel
             => component.InstanceGuid.ToString("N").Substring(0, 4).ToUpperInvariant();
 
         /// <summary>
-        /// What the panel draws. The value is whatever has been set, falling back to what the
-        /// script registered it as, which is also what it shows before anybody has touched it.
+        /// What the panel draws. The value is the one the panel has set, falling back to the
+        /// default the script registered, which is what an untouched control shows.
         /// </summary>
         static object Describe(UiControl control, IReadOnlyDictionary<string, object> held)
         {
@@ -163,7 +162,7 @@ namespace PillScript.Panel
             };
         }
 
-        /// <summary>A value in the shape the page reads it in.</summary>
+        /// <summary>A value converted to the shape the page reads.</summary>
         static object Wire(string kind, object value)
         {
             switch (kind)

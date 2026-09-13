@@ -10,10 +10,11 @@ using Rhino;
 namespace PillScript.Bridge
 {
     /// <summary>
-    /// A small HTTP endpoint on the loopback address that lets a tool outside Rhino read and write
-    /// the sources of any script component on the canvas, compile it and read what it produced.
-    /// It speaks a plain request and answer shape; the MCP wrapper that agents talk to lives
-    /// outside and forwards to this. What the tools actually do is in BridgeTools.
+    /// A small HTTP endpoint on the loopback address. A tool outside Rhino can use it to read
+    /// and write the sources of any script component on the canvas, compile it and read the
+    /// output. The protocol is a plain request and answer shape. The MCP wrapper that agents talk
+    /// to runs as a separate process and forwards to this. The tools themselves are in
+    /// BridgeTools.
     /// </summary>
     internal static class ScriptBridgeServer
     {
@@ -32,9 +33,9 @@ namespace PillScript.Bridge
         public static int Port { get; private set; }
 
         /// <summary>
-        /// True when PILLSCRIPT_BRIDGE asks for the bridge. It is off unless asked for, because
-        /// installing the editor should not also open a port that writes and runs code; only
-        /// somebody driving the component from outside Rhino wants that, and they know they do.
+        /// True when PILLSCRIPT_BRIDGE is set. The bridge is off by default: installing the
+        /// editor should not also open a port that writes and runs code. Only a caller driving the
+        /// component from outside Rhino needs it, and setting the variable is an explicit request.
         /// </summary>
         public static bool Wanted
         {
@@ -49,8 +50,8 @@ namespace PillScript.Bridge
         }
 
         /// <summary>
-        /// Starts listening, if asked to. Failing to start is not worth interrupting anybody over:
-        /// the editor works without it.
+        /// Starts listening, if the variable is set. A failure to start is swallowed, since the
+        /// editor works without the bridge.
         /// </summary>
         public static void Start()
         {
@@ -113,7 +114,7 @@ namespace PillScript.Bridge
         static void Answer(HttpListenerContext context)
         {
             // This runs on a pool thread, where an escaping exception ends the process, so the
-            // whole exchange including writing the answer is wrapped.
+            // whole exchange including writing the answer is inside the try.
             try
             {
                 var refusal = Refuse(context.Request);
@@ -157,26 +158,25 @@ namespace PillScript.Bridge
         }
 
         /// <summary>
-        /// Says why a request is not being answered, or null to answer it. This is what keeps a
-        /// page in a browser from driving Rhino: the port is reachable from one, and writing a
-        /// script and compiling it are side effects, so a page never needs to read the answer to
-        /// get what it wants.
+        /// The reason a request is refused, or null to answer it. These checks are what keep a
+        /// web page from driving Rhino: the port is reachable from a browser, and writing a script
+        /// and compiling it are side effects, so an attacker would not need to read the response.
         /// </summary>
         static string Refuse(HttpListenerRequest request)
         {
-            // A page can only set this content type cross-origin by asking permission first, and
-            // that question is one this listener never answers. A local caller just sets it.
+            // A page can only set this content type cross-origin after a preflight request,
+            // which this listener never answers. A local caller sets it directly.
             var type = request.ContentType ?? string.Empty;
 
             if (type.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) < 0)
                 return "This endpoint takes application/json.";
 
-            // Anything a browser sends from a page carries this, whatever the page does.
+            // A browser attaches this header to every request a page makes.
             if (!string.IsNullOrEmpty(request.Headers["Origin"]))
                 return "This endpoint does not answer requests from a web page.";
 
-            // With the name rebound to the loopback address a page counts as same origin, and the
-            // two checks above stop applying. What it cannot do is arrive naming the address.
+            // A hostname rebound to the loopback address makes a page same origin, which defeats
+            // the two checks above. Only a Host header naming the address itself is accepted.
             var host = request.Headers["Host"] ?? string.Empty;
 
             if (!host.StartsWith("127.0.0.1", StringComparison.Ordinal)
@@ -202,7 +202,7 @@ namespace PillScript.Bridge
             return OnUi(() => BridgeTools.Run(tool, arguments));
         }
 
-        /// <summary>Runs the work where the Grasshopper document can be touched, and waits for it.</summary>
+        /// <summary>Runs the work on the thread that owns the Grasshopper document and waits.</summary>
         static object OnUi(Func<object> work)
         {
             object result = null;

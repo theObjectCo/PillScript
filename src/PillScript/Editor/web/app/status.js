@@ -50,7 +50,7 @@
       document.body.classList.toggle('dock-left', message.dockLeft);
     }
 
-    // The side it already sits on is the one that puts it back into a window of its own.
+    // Choosing the side it is already docked to undocks it back into a window.
     var docked = !!message.docked;
     var left = docked && !!message.dockLeft;
 
@@ -93,8 +93,8 @@
     var items = message.items || [];
     var state = SS.state;
 
-    // The C# files are already marked up by Roslyn as they are typed; this is for the rest,
-    // where a compile is the only thing that ever has an opinion.
+    // Roslyn marks up the C# files as they are typed. This handles the other files, where a
+    // compile is the only source of diagnostics.
     Object.keys(state.models).forEach(function (name) {
       if (state.models[name].getLanguageId() === SS.csharpId()) return;
 

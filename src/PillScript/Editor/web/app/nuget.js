@@ -1,12 +1,12 @@
-// Searching nuget.org from the references window, and adding what comes back. The rest of that
-// window is in references.js, which owns the lists and the note under them.
+// Searching nuget.org from the references window and adding a result. The rest of that window is
+// in references.js, which owns the lists and the note under them.
 (function () {
   'use strict';
 
   var SS = window.SS;
   var el = SS.el;
 
-  // Long enough to finish typing a package name, short enough that the list feels live.
+  // Long enough to finish typing a package name, short enough that the list keeps up.
   var SEARCH_DELAY = 350;
 
   var timer = null;
@@ -48,7 +48,7 @@
     note('Searching nuget.org...');
 
     SS.request('searchPackages', { name: term }).then(function (hits) {
-      // A slower answer for a term that has since been retyped must not overwrite a newer one.
+      // A slow answer for a term that has since been retyped must not overwrite a newer one.
       if (el['ref-search'].value.trim() !== term) return;
 
       if (!hits) {
@@ -78,7 +78,7 @@
       el['ref-results'].appendChild(item);
     });
 
-    // Not being on nuget.org is not the last word: a private feed may still know the id.
+    // An id missing from nuget.org is still added, since a private feed may carry it.
     var exact = hits.some(function (hit) { return hit.id.toLowerCase() === term.toLowerCase(); });
     if (exact) return;
 

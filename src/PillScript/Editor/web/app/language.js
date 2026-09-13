@@ -1,14 +1,14 @@
 // What Monaco asks and Roslyn answers: completion, hover, signature help, the squiggles that
-// appear while typing, and the three that are about a symbol rather than a position - go to
-// definition, find all references, and rename. All of it before anything has been compiled.
+// appear while typing, and the requests about a symbol instead of a position - go to definition,
+// find all references, rename. All of it runs before anything has been compiled.
 (function () {
   'use strict';
 
   var SS = window.SS;
   var state = SS.state;
 
-  // Long enough that typing a word does not send a request per keystroke, short enough that a
-  // mistake is underlined before the eye has moved on.
+  // Long enough that typing a word does not send one request per keystroke, short enough that a
+  // mistake is underlined while the caret is still on the line.
   var DIAGNOSE_DELAY = 400;
 
   var timers = {};
@@ -84,8 +84,8 @@
         return SS.request('hover', at(model, position)).then(function (text) {
           if (!text) return null;
 
-          // Roslyn puts the signature first and the prose after a blank line; the signature is
-          // worth showing as code, the prose is not.
+          // Roslyn puts the signature first and the prose after a blank line. The signature is
+          // shown as code, the prose as text.
           var split = text.indexOf('\n\n');
           var signature = split < 0 ? text : text.substring(0, split);
           var prose = split < 0 ? '' : text.substring(split + 2);
@@ -149,8 +149,8 @@
     };
   }
 
-  /// Roslyn answers only for the script's own files: a type out of RhinoCommon lives in an
-  /// assembly, and there is no file to open for it.
+  /// Roslyn resolves only the script's own files. A type from RhinoCommon is declared in an
+  /// assembly and there is no file to open for it.
   function places(found) {
     if (!found || !found.length) return [];
 
@@ -176,8 +176,8 @@
 
     monaco.languages.registerRenameProvider(id, {
       provideRenameEdits: function (model, position, newName) {
-        // The edits are worked out against the copy of the project the host holds, so every file
-        // it might touch is sent across first. Messages arrive in order, so the saves land first.
+        // The edits are computed against the copy of the project the host holds, so every file
+        // they might touch is sent first. Messages arrive in order, so the saves land first.
         SS.flushAll();
 
         var query = at(model, position);

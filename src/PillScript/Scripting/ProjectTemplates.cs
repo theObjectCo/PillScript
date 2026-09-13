@@ -7,16 +7,15 @@ using System.Xml.Linq;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// What a new script starts as, and the one generated file that ties the project to the Rhino
-    /// running on this machine. Kept apart from the project itself so the text an author first
-    /// reads can be read here in one piece.
+    /// The templates a new script starts from, plus the one generated file that ties the project
+    /// to the Rhino running on this machine. They sit here, away from the project code, so the text
+    /// an author reads first can be read in one piece.
     /// </summary>
     internal static class ProjectTemplates
     {
         /// <summary>
-        /// The usings every file in the script starts with. An ordinary project file, so it can be
-        /// edited: adding a line here is how a script reaches a namespace it uses often without
-        /// repeating the using in each file.
+        /// The usings every file in the script starts with. This is an ordinary project file and
+        /// can be edited. Adding a line here saves repeating the same using in every file.
         /// </summary>
         public const string Usings = @"// Namespaces every file in this script starts with, so that no file has to repeat them. This is
 // an ordinary file of the project: add a line here and the next compile picks it up.
@@ -34,8 +33,8 @@ global using PillScript;
 ";
 
         /// <summary>
-        /// The project file. It carries no machine specific paths of its own, which is what lets
-        /// it be both the thing an IDE opens and the thing the component restores against.
+        /// The project file. It holds no machine specific paths, so the same csproj serves both
+        /// the IDE that opens it and the restore the component runs.
         /// </summary>
         public const string Project = @"<Project Sdk=""Microsoft.NET.Sdk"">
 
@@ -67,10 +66,9 @@ global using PillScript;
 ";
 
         /// <summary>
-        /// What a new component holds. The comment at the top is the documentation for writing
-        /// one of these: the rules the compiler enforces, how a parameter becomes an input, and
-        /// what lives between runs. It is the first thing anybody opening the editor reads, and
-        /// the only place they are told any of it.
+        /// The Script.cs a new component starts with. It compiles and produces a circle, so a
+        /// fresh component has something to run before a line of it is edited. The two comment
+        /// lines at the top point at readme.md, where the rules are written down.
         /// </summary>
         public const string Source = @"// The parameters of this component are read out of the RunScript signature below.
 // readme.md, in the sidebar, says how that works and what else the editor can do.
@@ -93,9 +91,9 @@ public class Script : ScriptBase
 ";
 
         /// <summary>
-        /// The documentation, as a file in the project rather than a wall of comment at the top
-        /// of Script.cs. It is where somebody who has just opened the editor is told how any of
-        /// this works, so it is the one template worth keeping long.
+        /// The documentation, kept as a file in the project instead of a long comment at the top
+        /// of Script.cs. It is the only place the rules are written down, which is why it runs to
+        /// some length.
         /// </summary>
         public const string Readme = @"# This script
 
@@ -273,9 +271,9 @@ component keeps the pill, and the icon appears once a fetch succeeds.
 ";
 
         /// <summary>
-        /// Points the project at the Rhino that is running right now rather than at a NuGet
-        /// package of some other version. Regenerated on every mirror, which is what keeps the
-        /// csproj the author edits free of machine specific paths.
+        /// Points the project at the Rhino process that is running, instead of at a RhinoCommon
+        /// NuGet package of some other version. Regenerated on every mirror, which keeps machine
+        /// specific paths out of the csproj the author edits.
         /// </summary>
         public static string BuildTargets()
         {
@@ -284,9 +282,9 @@ component keeps the pill, and the icon appears once a fetch succeeds.
                 new XElement("HintPath", path),
                 new XElement("Private", "false")));
 
-            // The rules the component compiles under, stated here rather than in the csproj, so
-            // that what an IDE reports and what Compile reports agree for a project written
-            // before these rules existed as much as for one written after.
+            // The rules the component compiles under. They go in the generated file instead of
+            // the csproj, so projects created before these rules existed get them too and the IDE
+            // reports the same diagnostics as Compile.
             var rules = new XElement("PropertyGroup",
                 new XElement("Nullable", "annotations"),
                 new XElement("NoWarn", "$(NoWarn);1701;1702"));
@@ -299,8 +297,8 @@ component keeps the pill, and the icon appears once a fetch succeeds.
         }
 
         /// <summary>
-        /// The Rhino side assemblies a script may use. The compiler takes the same list, so what
-        /// the IDE resolves from the csproj and what the component compiles against stay equal.
+        /// The Rhino assemblies a script may use. ScriptCompiler is given the same list, so the
+        /// IDE resolves from the csproj exactly what the component compiles against.
         /// </summary>
         public static IEnumerable<string> HostReferences()
         {
@@ -330,9 +328,9 @@ component keeps the pill, and the icon appears once a fetch succeeds.
 
             yield return Path.Combine(rhinoFolder, "Rhino.UI.dll");
 
-            // Eto does not sit with the others. RhinoCommon loads out of the netcore folder inside
-            // System, while Eto.dll stays in System itself, one above it. Which folder holds it is
-            // a detail of how Rhino is put together, so both are asked and whichever answers wins.
+            // Eto is not stored with the others. RhinoCommon.dll loads from the netcore folder
+            // inside System, while Eto.dll sits in System itself, one level up. That layout is an
+            // internal detail of Rhino, so both folders are tried and the first hit is used.
             yield return Path.Combine(rhinoFolder, "Eto.dll");
 
             var above = Path.GetDirectoryName(rhinoFolder);

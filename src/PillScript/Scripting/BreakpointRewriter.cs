@@ -8,9 +8,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// Puts a call to the debug session in front of every statement the editor marked, carrying
-    /// the locals that are readable at that point. This is what a breakpoint is here: there is no
-    /// debugger attached to Rhino, so the pause is compiled into the script itself.
+    /// Inserts a call to the debug session before every statement the editor marked, passing the
+    /// locals readable at that point. No debugger is attached to Rhino, so a breakpoint here is a
+    /// pause compiled into the script itself.
     /// </summary>
     internal sealed class BreakpointRewriter : CSharpSyntaxRewriter
     {
@@ -25,7 +25,7 @@ namespace PillScript.Scripting
             _lines = lines;
         }
 
-        /// <summary>Answers the rewritten tree, or the original when nothing on it is marked.</summary>
+        /// <summary>Returns the rewritten tree, or the original when nothing in it is marked.</summary>
         public static SyntaxTree Apply(
             SyntaxTree tree, SemanticModel model, string file, IEnumerable<int> lines)
         {
@@ -46,7 +46,7 @@ namespace PillScript.Scripting
             var statements = new List<StatementSyntax>();
             var changed = false;
 
-            // The original node is used for positions, because the visited one has moved.
+            // Positions come from the original node, since the visited one has already moved.
             for (var i = 0; i < node.Statements.Count; i++)
             {
                 var original = node.Statements[i];
@@ -58,8 +58,8 @@ namespace PillScript.Scripting
                     changed = true;
                 }
 
-                // The call sits on the same line as the statement it guards, so every line number
-                // the compiler reports afterwards still matches the file the author is looking at.
+                // The call goes on the same line as the statement it guards, so the line numbers
+                // the compiler reports still match the file the author is editing.
                 statements.Add(_lines.Contains(line)
                     ? visited.Statements[i].WithLeadingTrivia(SyntaxFactory.Space)
                     : visited.Statements[i]);
@@ -88,9 +88,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Builds the name and value pairs handed to the session. Only symbols that are certainly
-        /// assigned here are included, because reading an unassigned local would not compile, and
-        /// only ones that can be boxed, which leaves out spans and pointers.
+        /// Builds the name and value pairs passed to the session. Only symbols definitely assigned
+        /// at this point are included, since reading an unassigned local would not compile, and
+        /// only ones that can be boxed, which excludes spans and pointers.
         /// </summary>
         ExpressionSyntax Locals(StatementSyntax statement)
         {
@@ -143,9 +143,9 @@ namespace PillScript.Scripting
         {
             if (symbol is ILocalSymbol) return true;
 
-            // The implicit this is in the flow analysis but is not a name the generated code can
-            // use. An out parameter is fine as long as it has been assigned, which the caller has
-            // already checked by taking only what is definitely assigned here.
+            // The implicit this appears in the flow analysis but is not a name the generated code
+            // can use. An out parameter is fine once assigned, which the caller has already checked
+            // by taking only the symbols definitely assigned here.
             return symbol is IParameterSymbol parameter
                    && !parameter.IsThis
                    && SyntaxFacts.IsValidIdentifier(parameter.Name);

@@ -8,15 +8,15 @@ using System.Text;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// Running the .NET SDK on the script's own project. Restoring packages and building a
-    /// referenced project both go through here, which is also the one place that knows where
-    /// dotnet.exe might be.
+    /// Runs the .NET SDK on the script's project. Restoring packages and building a referenced
+    /// project both go through here, and this is the only place that knows where dotnet.exe may
+    /// be.
     /// </summary>
     internal static class DotnetSdk
     {
         static readonly TimeSpan Timeout = TimeSpan.FromMinutes(3);
 
-        /// <summary>The SDK, or null when this machine has none. The caller says what that means.</summary>
+        /// <summary>The SDK, or null when the machine has none. The caller decides what to say.</summary>
         public static string Find()
         {
             var configured = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
@@ -38,7 +38,7 @@ namespace PillScript.Scripting
             return candidates.FirstOrDefault(File.Exists);
         }
 
-        /// <summary>Runs an SDK command and answers whether it succeeded, with its log.</summary>
+        /// <summary>Runs an SDK command and returns whether it succeeded, along with its log.</summary>
         public static bool Run(string dotnet, IReadOnlyList<string> arguments, string folder, out string output)
         {
             var startInfo = new ProcessStartInfo(dotnet)
@@ -82,7 +82,7 @@ namespace PillScript.Scripting
             }
         }
 
-        /// <summary>Keeps the last few lines of a tool log, which is where its complaint usually is.</summary>
+        /// <summary>Keeps the last few lines of a tool log, where the error is usually reported.</summary>
         public static string Tail(string text, int lines = 6)
         {
             var all = Lines(text).ToList();

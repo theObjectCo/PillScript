@@ -1,4 +1,4 @@
-// Where the script stops, and what it looks like while it is stopped. The component owns the
+// Where the script stops, and what the editor shows while it is stopped. The component owns the
 // marks and compiles them in, so every change here is reported to it.
 (function () {
   'use strict';
@@ -74,7 +74,7 @@
 
     el.breakpoints.classList.toggle('armed', total > 0 && enabled);
 
-    // Highlighted means the marks are switched off, which is a state worth seeing at a glance.
+    // Highlighted while the marks are switched off, since that state changes what a run does.
     el['breakpoints-toggle'].classList.toggle('on', !enabled);
     el['breakpoints-toggle'].title = enabled ? 'Disable all breakpoints' : 'Enable all breakpoints';
     el['menu-toggle'].textContent = enabled ? 'Disable all breakpoints' : 'Enable all breakpoints';

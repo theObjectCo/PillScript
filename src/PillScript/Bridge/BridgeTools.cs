@@ -8,8 +8,8 @@ using PillScript.Scripting;
 namespace PillScript.Bridge
 {
     /// <summary>
-    /// The tools the bridge offers, and what each one does to a component. Everything here runs on
-    /// the UI thread, because that is where the Grasshopper document may be touched.
+    /// The tools the bridge offers and what each one does to a component. Everything here runs on
+    /// the UI thread, which is the only thread that may touch the Grasshopper document.
     /// </summary>
     internal static class BridgeTools
     {
@@ -94,8 +94,8 @@ namespace PillScript.Bridge
             var component = Find(arguments);
             var asked = BridgeLookup.Text(arguments, "file");
 
-            // The name a new file ends up with need not be the one asked for, so the answer says
-            // which file was actually written.
+            // A new file can end up with a different name than the one asked for, so the answer
+            // names the file that was actually written.
             var file = component.Project.Find(asked);
 
             if (file == null)
@@ -125,8 +125,8 @@ namespace PillScript.Bridge
         }
 
         /// <summary>
-        /// Applies a change to the project and lets the component and any open editor catch up with
-        /// it. The change answers null when it went through, a reason when it did not.
+        /// Applies a change to the project and brings the component and any open editor up to
+        /// date. The change returns null when it succeeded and a reason when it did not.
         /// </summary>
         static object Changed(JsonElement arguments, Func<PillScriptComponent, string> change)
         {
@@ -146,7 +146,7 @@ namespace PillScript.Bridge
             CompileResult result = null;
 
             // The compile finishes back on the UI thread, which this call is holding, so the wait
-            // is a nested message loop rather than a block that would never be released.
+            // runs a nested message loop. A plain block here would never be released.
             var frame = new DispatcherFrame();
             var timeout = new DispatcherTimer(DispatcherPriority.Normal)
             {

@@ -7,9 +7,9 @@ using PillScript.Scripting;
 namespace PillScript.Components
 {
     /// <summary>
-    /// Turns the signature a build produced into the component's parameters. Kept apart from the
-    /// component because it is a piece of bookkeeping in its own right: which wires can be kept,
-    /// and when the list on the canvas already says what the code says.
+    /// Turns the signature a build produced into the component's parameters. It sits apart from
+    /// the component because deciding which wires survive, and whether the canvas already matches
+    /// the code, is a job of its own.
     /// </summary>
     internal static class ParameterLayout
     {

@@ -44,8 +44,8 @@ namespace PillScript.Scripting
         {
             var signature = script.Signature;
 
-            // The same instance every time, so what a script puts in a field is still there on the
-            // next call. What belongs to this one call is handed to it below.
+            // The same instance every time, so a value a script stores in a field is still there
+            // on the next call. The state belonging to this one call is assigned below.
             var instance = script.Instance;
 
             if (instance is ScriptBase scripted)
@@ -120,9 +120,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Trees arrive as goo. A GH_Structure signature takes them as they are; a DataTree of a
-        /// plain type gets each item unwrapped into that type, and whatever will not go says so
-        /// on the component rather than leaving a branch quietly shorter than it arrived.
+        /// Trees arrive as goo. A GH_Structure parameter takes them unchanged. A DataTree of a
+        /// plain type has each item unwrapped into that type, and any item that will not convert is
+        /// reported on the component, so a branch never silently comes out shorter.
         /// </summary>
         static object ReadTree(IGH_DataAccess access, int index, ScriptParam param, GH_Component component)
         {
@@ -174,9 +174,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// What the component says about items a tree input could not give the script. One line
-        /// per parameter however many items it was, naming the first, because a branch of two
-        /// hundred points aimed at a Curve would otherwise fill the canvas with the same sentence.
+        /// The message for items a tree input could not convert. One line per parameter whatever
+        /// the count, naming the first refusal, since a branch of two hundred points aimed at a
+        /// Curve would otherwise repeat the same sentence across the canvas.
         /// </summary>
         static string Refused(ScriptParam param, int count, GH_Path where, string what)
         {

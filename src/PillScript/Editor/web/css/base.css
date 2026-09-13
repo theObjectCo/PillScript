@@ -1,5 +1,5 @@
 /* Dark Modern, the theme Visual Studio Code ships as its dark default, applied to the whole
-   window rather than only to the code. Workbench colours here, token colours in theme.js. */
+   window and not only to the code. Workbench colours here, token colours in theme.js. */
 
 :root {
   --editor: #1f1f1f;

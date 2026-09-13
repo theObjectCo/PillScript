@@ -9,8 +9,8 @@ using PillScript.Components;
 namespace PillScript.Bridge
 {
     /// <summary>
-    /// Finding the component a call is about, and saying what a component looks like from outside
-    /// Rhino. Shared by every tool, so it is kept where all of them can see it.
+    /// Finds the component a call is about and describes a component to a caller outside Rhino.
+    /// Every tool needs both, which is why they are here.
     /// </summary>
     internal static class BridgeLookup
     {
@@ -79,7 +79,7 @@ namespace PillScript.Bridge
                     .ToList()
             };
 
-        /// <summary>The component's own print and error pane, which is where a script reports itself.</summary>
+        /// <summary>The component's print and error output, where a script reports its own state.</summary>
         public static List<string> Output(PillScriptComponent component)
         {
             var lines = new List<string>();

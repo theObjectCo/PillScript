@@ -5,8 +5,8 @@ using System.Runtime.CompilerServices;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// A script assembly that has been loaded and inspected: the signature it exposes plus
-    /// the handle needed to throw it away again.
+    /// A script assembly that has been loaded and inspected: the signature it exposes and the
+    /// handle needed to unload it.
     /// </summary>
     internal sealed class CompiledScript : IDisposable
     {
@@ -31,18 +31,18 @@ namespace PillScript.Scripting
             => new CompiledScript(context, assembly, ScriptSignature.Read(assembly), sourceHash);
 
         /// <summary>
-        /// The one instance every call runs on. It is made once and kept, so a field on the script
-        /// carries from one solve to the next the same way a static does, and a field initialiser
-        /// runs once rather than on every iteration. Only compiling throws it away, along with
-        /// everything else this build owns.
+        /// The single instance every call runs on. It is created once and kept, so a field on the
+        /// script survives from one solve to the next as a static would, and a field initialiser
+        /// runs once instead of on every iteration. Only a compile discards it, together with the
+        /// rest of this build.
         /// </summary>
         public object Instance => _instance ??= Activator.CreateInstance(Signature.ScriptType);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public void Dispose()
         {
-            // Let go of the instance first: it is of a type from the context being unloaded, and
-            // the context only comes apart once nothing holds anything belonging to it.
+            // Release the instance first. Its type comes from the context being unloaded, and the
+            // context is only collected once nothing holds anything belonging to it.
             _instance = null;
 
             _context?.Unload();

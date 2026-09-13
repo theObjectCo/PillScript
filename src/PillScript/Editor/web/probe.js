@@ -86,8 +86,8 @@
     }
   };
 
-  // Once the editor exists, put the caret after a dot and ask for the suggestion list, so a
-  // headless run can see whether the provider is wired up.
+  // Once the editor exists, the caret is put after a dot and the suggestion list requested, so a
+  // headless run can check that the provider is connected.
   window.onEditorReady = function (editor, monaco) {
     setTimeout(function () {
       var model = editor.getModel();

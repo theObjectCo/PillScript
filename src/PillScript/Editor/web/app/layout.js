@@ -1,5 +1,5 @@
-// Where the panes sit, and where the window sits. The window has no frame of its own, so moving
-// and resizing it is reported to the host, which hands the press to the system.
+// Where the panes sit, and where the window sits. The window has no frame of its own, so a move
+// or a resize is reported to the host, which hands the press to the system.
 (function () {
   'use strict';
 
@@ -40,7 +40,7 @@
   el['t-panel'].onclick = function () { toggle('panel'); };
   el['t-toolbar'].onclick = function () { toggle('toolbar'); };
 
-  // Zen turns everything off, or back on again once there is nothing left to turn off.
+  // Zen hides every pane, and restores them once there is nothing left to hide.
   el['t-zen'].onclick = function () {
     var anyOn = layout.sidebar || layout.minimap || layout.panel || layout.toolbar;
     layout = { sidebar: !anyOn, minimap: !anyOn, panel: !anyOn, toolbar: !anyOn };
@@ -67,8 +67,8 @@
     });
   });
 
-  // WebView2 at the version Rhino ships has no non-client regions, so dragging the window is
-  // relayed to the host instead of being declared in CSS.
+  // The WebView2 version Rhino ships has no non-client regions, so a window drag is relayed to
+  // the host instead of being declared in CSS.
   el.titlebar.addEventListener('mousedown', function (event) {
     if (event.button !== 0) return;
     if (event.target.closest('.window-buttons')) return;
@@ -86,16 +86,16 @@
 
   // ----- splitters --------------------------------------------------------------------------------
 
-  // Dragging the dock splitter reports how far it has moved from where it was grabbed; the host
-  // turns that into a share of the Grasshopper window, so the split survives a resize.
+  // Dragging the dock splitter reports how far it has moved from where it was grabbed. The host
+  // converts that into a fraction of the Grasshopper window, so the split survives a resize.
   el.splitter.addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
 
     var start = event.screenX;
     var ratio = window.devicePixelRatio || 1;
 
-    // Widening means dragging away from the canvas, which is leftwards on the right side and
-    // rightwards on the left one, so the sign follows the side the editor is docked to.
+    // Widening means dragging away from the canvas: leftwards when docked right, rightwards when
+    // docked left, so the sign follows the side.
     var sign = document.body.classList.contains('dock-left') ? 1 : -1;
 
     el.splitter.setPointerCapture(event.pointerId);
@@ -107,8 +107,8 @@
     });
   });
 
-  // Dragging a pane edge. The size is written straight onto the pane, because these are the two
-  // places where a person wants a different balance than the one that was picked for them.
+  // Dragging a pane edge. The size is written directly onto the pane, since these two splits are
+  // the ones most often set to something other than the default.
   function paneSplitter(handle, pane, vertical, invert) {
     handle.addEventListener('pointerdown', function (event) {
       if (event.button !== 0) return;
@@ -132,7 +132,7 @@
     });
   }
 
-  /// Follows the pointer until it is let go, then tidies up after itself.
+  /// Follows the pointer until it is released, then removes its own listeners.
   function drag(handle, move) {
     function stop() {
       handle.classList.remove('dragging');

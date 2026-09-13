@@ -9,8 +9,8 @@
   var pending = {};
   var nextRequest = 1;
 
-  // How long a call waits before it is given up on. The host answers in milliseconds; this is
-  // only so a lost answer cannot leave a promise hanging for the rest of the session.
+  // How long a call waits before it is abandoned. The host answers in milliseconds, so this only
+  // stops a lost answer from leaving a promise pending for the rest of the session.
   var TIMEOUT = 10000;
 
   SS.hosted = !!host;
@@ -40,8 +40,8 @@
     });
   };
 
-  // A page that throws silently is a page nobody can fix, so failures are reported to the host
-  // and end up in the editor's own output pane.
+  // A failure in the page is reported to the host and printed in the editor's output pane.
+  // Without this it would be visible only in the WebView2 console, which is not open.
   window.addEventListener('error', function (event) {
     SS.send({
       type: 'pageError',

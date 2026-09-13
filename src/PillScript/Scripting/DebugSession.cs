@@ -30,9 +30,9 @@ namespace PillScript
     }
 
     /// <summary>
-    /// The other half of a breakpoint. The compiler puts a call to <see cref="Break"/> in front of
-    /// every line the editor has marked; this holds the solve there and shows the editor what the
-    /// locals were, until somebody continues or stops.
+    /// The runtime half of a breakpoint. The rewriter inserts a call to <see cref="Break"/>
+    /// before every line the editor has marked. This class holds the solve at that call and sends
+    /// the locals to the editor until the script is continued or stopped.
     /// </summary>
     public static class DebugSession
     {
@@ -77,8 +77,8 @@ namespace PillScript
             {
                 Paused.Invoke(stop);
 
-                // A nested message loop keeps Rhino answering while the solve stands still, the
-                // same trick a modal dialog uses. Without it a breakpoint would freeze the host.
+                // A nested message loop keeps Rhino responsive while the solve is held, the same
+                // mechanism a modal dialog uses. Without it a breakpoint would freeze the host.
                 _frame = new DispatcherFrame();
                 Dispatcher.PushFrame(_frame);
             }
@@ -146,7 +146,7 @@ namespace PillScript
             return name + "<" + arguments + ">";
         }
 
-        /// <summary>A short, readable rendering: collections say how many, everything else says what.</summary>
+        /// <summary>A short rendering: collections show their count, other values their text.</summary>
         static string Format(object value)
         {
             if (value == null) return "null";

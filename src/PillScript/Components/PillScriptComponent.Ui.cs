@@ -8,15 +8,14 @@ using PillScript.Scripting;
 namespace PillScript.Components
 {
     /// <summary>
-    /// The half of the component that belongs to the Rhino panel: whether it is published there,
-    /// what the panel's controls are currently set to, and how a change becomes a new solve.
+    /// The part of the component that serves the Rhino panel: the published flag, the values the
+    /// panel's controls hold, and the path from a changed value to the next solve.
     /// </summary>
     public partial class PillScriptComponent
     {
         /// <summary>
-        /// A dragged slider sends a value every few milliseconds. Solving on each one makes the
-        /// canvas crawl and the last one is the only one anybody wanted, so they are collected and
-        /// the solve happens once they stop.
+        /// A dragged slider sends a value every few milliseconds. Values arriving inside this
+        /// window are collected and a single solve runs after the last of them.
         /// </summary>
         static readonly TimeSpan Settle = TimeSpan.FromMilliseconds(60);
 
@@ -29,8 +28,8 @@ namespace PillScript.Components
         internal bool IsPublished { get; private set; }
 
         /// <summary>
-        /// Whether its section in the panel is rolled up. Kept with the document, because a panel
-        /// of four scripts is arranged once and then wants to stay that way.
+        /// Whether its section in the panel is rolled up. Saved in the document, so an arrangement
+        /// of several sections survives reopening the file.
         /// </summary>
         internal bool IsCollapsed { get; private set; }
 
@@ -43,15 +42,15 @@ namespace PillScript.Components
         }
 
         /// <summary>
-        /// Where this section sits in the panel. Scripts land on the canvas in the order they were
-        /// written, which has little to do with the order they want to be read in, so the panel
-        /// keeps an order of its own. Unset means fall in behind those that have one.
+        /// Where this section sits in the panel. Canvas order follows the order the scripts were
+        /// written in, so the panel keeps a separate order, set by dragging a section. int.MaxValue
+        /// means unset, and unset sections follow the ones with a position.
         /// </summary>
         internal int UiOrder { get; private set; } = int.MaxValue;
 
         internal void SetOrder(int order) => UiOrder = order;
 
-        /// <summary>How long the last solve took, in milliseconds, and whether it went through.</summary>
+        /// <summary>How long the last solve took, in milliseconds, and whether it completed.</summary>
         internal double LastSolveMs { get; private set; }
 
         internal bool LastSolveFailed { get; private set; }
@@ -62,15 +61,15 @@ namespace PillScript.Components
             LastSolveFailed = failed;
         }
 
-        /// <summary>Raised when any component's publication or values changed, for the panel.</summary>
+        /// <summary>Raised when a component's published flag or values changed. The panel listens.</summary>
         internal static event Action Published;
 
         internal static void AnnouncePublished() => Published?.Invoke();
 
         /// <summary>
-        /// Asks the compiled script what controls it wants, handing it what they currently hold.
-        /// Asked fresh each time, so a change shows up as soon as it is compiled. A script that
-        /// has not been built, or that does not override RegisterUi, registers nothing.
+        /// Calls RegisterUi on the compiled script, passing the values the controls currently
+        /// hold. This runs on every publication, so an edited RegisterUi takes effect as soon as it
+        /// compiles. A script with no build, or without the override, registers nothing.
         /// </summary>
         internal UiRegistrar Register()
         {
@@ -79,8 +78,8 @@ namespace PillScript.Components
 
             if (!(_compiled?.Instance is ScriptBase script))
             {
-                // An empty section with nothing said about it looks like a script that registered
-                // nothing, when what happened is that there is no build to ask.
+                // Without this message an unbuilt script looks the same in the panel as one that
+                // registered no controls.
                 UiProblem = _compiled == null
                     ? "This script has not been built, so its controls are not known."
                     : null;
@@ -94,17 +93,17 @@ namespace PillScript.Components
             }
             catch (Exception exception)
             {
-                // A panel that empties itself because RegisterUi threw helps nobody; say so.
+                // The section would otherwise go empty with no sign that RegisterUi threw.
                 UiProblem = ScriptFault.Describe(ScriptFault.Unwrap(exception));
             }
 
             return registrar;
         }
 
-        /// <summary>Why RegisterUi produced nothing, or null when it did not throw.</summary>
+        /// <summary>Why there are no controls: an exception message, the not-built notice, or null.</summary>
         internal string UiProblem { get; private set; }
 
-        /// <summary>What the panel has set, which is all a control needs to be read back.</summary>
+        /// <summary>The values the panel has set, keyed by control name.</summary>
         internal IReadOnlyDictionary<string, object> UiHeld => _ui;
 
         internal void SetPublished(bool published)
@@ -114,16 +113,16 @@ namespace PillScript.Components
             RecordUndoEvent("Publish to panel");
             IsPublished = published;
 
-            // Opened before the panel is told to redraw, so the first publication of a session
-            // shows the controls rather than an empty tab somebody has to find first.
+            // Opened before the redraw, so the first publication in a session brings the panel up
+            // with the controls already in it.
             if (published) UiPanelHost.Show();
 
             AnnouncePublished();
         }
 
         /// <summary>
-        /// Takes a value from the panel. The solve is put off for a moment, so a slider being
-        /// dragged is one solve at the end rather than forty along the way.
+        /// Takes a value from the panel and restarts the settle timer. A slider drag therefore
+        /// costs one solve at the end instead of one per step.
         /// </summary>
         internal void SetUiValue(string name, object value)
         {
@@ -148,9 +147,9 @@ namespace PillScript.Components
         // ----- what is kept in the document ------------------------------------------------------
 
         /// <summary>
-        /// Only what the panel has been set to is written. What a control starts at comes from
-        /// RegisterUi, so writing that here as well would leave the document holding a number the
-        /// script has since changed its mind about, with no way to tell which of the two was meant.
+        /// Only values the panel has set are written. Defaults come from RegisterUi, and storing
+        /// them here as well would leave the document holding a stale default after the script's
+        /// own default changed, with no way to tell the two apart.
         /// </summary>
         void WriteUi(GH_IO.Serialization.GH_IWriter writer)
         {
@@ -211,13 +210,12 @@ namespace PillScript.Components
             }
         }
 
-        /// <summary>The file a script may carry to restyle the panel.</summary>
+        /// <summary>The optional stylesheet a script project may carry to restyle the panel.</summary>
         internal const string StyleFile = "ui.css";
 
         /// <summary>
-        /// A saved ui.css reaches the panel at once. Styling is the one thing here that needs
-        /// neither a compile nor a solve, and waiting for one to see a colour change is no way to
-        /// write a stylesheet.
+        /// A saved ui.css reaches the panel immediately. Styling needs neither a compile nor a
+        /// solve, so the panel is redrawn as soon as the file is written.
         /// </summary>
         internal void NoteSaved(string file)
         {
@@ -225,13 +223,13 @@ namespace PillScript.Components
                 AnnouncePublished();
         }
 
-        /// <summary>Everything the panel needs to draw this component, in one read.</summary>
+        /// <summary>Everything the panel needs to draw this component, read in one call.</summary>
         internal (UiRegistrar Ui, string Problem, string Style) Publication()
             => (Register(), UiProblem, Project.Find(StyleFile)?.Content ?? string.Empty);
 
         /// <summary>
-        /// Clears the buttons once the solve their press caused is over, so the next solve does
-        /// not see the press again.
+        /// Clears button values after the solve their press triggered, so the next solve does not
+        /// see the same press.
         /// </summary>
         internal void ReleaseButtons(UiRegistrar registrar)
         {

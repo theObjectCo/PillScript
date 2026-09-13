@@ -15,8 +15,8 @@
 
 .splitter:hover, .splitter.dragging { background: var(--accent); }
 
-/* Docked there is no window to move or resize, and the title bar is the first thing worth
-   giving back to the code. */
+/* Docked, there is no window to move or resize, so the title bar is removed and its height goes
+   to the editor. */
 body.docked #titlebar { display: none; }
 body.docked #dock-left.on, body.docked #dock-right.on { color: var(--accent); background: #232323; }
 body.docked #shell { border-left: 1px solid var(--border); }
@@ -28,9 +28,9 @@ body.dock-left #dock-close { color: #868686; }
 
 /* ----- scrollbars ----- */
 
-/* Monaco draws its own and takes the colours from theme.js. Everything else on the page uses the
-   browser's, so they are given the same three values here: the panel views, the terminal and the
-   sidebar end up looking like the editor rather than like a web page inside it. */
+/* Monaco draws its own scrollbars and takes the colours from theme.js. The rest of the page uses
+   the browser's, so they are given the same three values here, which keeps the panel views, the
+   terminal and the sidebar matching the editor. */
 
 *::-webkit-scrollbar {
   width: 14px;
@@ -54,8 +54,8 @@ body.dock-left #dock-close { color: #868686; }
 
 /* ----- resizing without a border ----- */
 
-/* The page reaches the window edge, so there is no frame left for the mouse to grab. These
-   strips sit over the last few pixels and hand a press to the system resize loop instead. */
+/* The page reaches the window edge, leaving no frame for the mouse to grab. These strips sit
+   over the last few pixels and hand a press to the system resize loop. */
 
 .resize { position: fixed; z-index: 40; }
 body.docked .resize { display: none; }
@@ -72,8 +72,8 @@ body.docked .resize { display: none; }
 
 /* ----- splitters between the panes ----- */
 
-/* Thin, and only coloured once the pointer is on them: a permanent line between every pane adds
-   up to a grid, and the panes already have their own borders. */
+/* Thin, and coloured only under the pointer. A permanent line between every pane would add up to
+   a grid, and the panes already have their own borders. */
 
 .pane-splitter { flex: none; background: transparent; }
 .pane-splitter:hover, .pane-splitter.dragging { background: var(--accent); }

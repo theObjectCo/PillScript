@@ -18,20 +18,20 @@ namespace PillScript.Scripting
         public string Name { get; set; }
         public string Content { get; set; }
 
-        /// <summary>Only these are compiled. A note or the project file is not.</summary>
+        /// <summary>Only files with these extensions are compiled. Notes and the csproj are not.</summary>
         public bool IsSource => Name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Only C# is named, because that one is ours. Everything else is left for Monaco to work
-        /// out from the extension, which saves keeping a list of them here.
+        /// Only C# is listed here, since the editor treats it specially. Monaco works the rest
+        /// out from the extension, which saves maintaining a list.
         /// </summary>
         public string Language => IsSource ? "csharp" : string.Empty;
     }
 
     /// <summary>
-    /// The sources belonging to one component instance, shaped as an SDK style project so an IDE
-    /// can open the folder and give real completion. The document is the source of truth: files
-    /// live inside the .gh file and are mirrored to a folder on disk, which is next door in
+    /// The sources belonging to one component instance, laid out as an SDK style project so an
+    /// IDE can open the folder and give completion. The document is the source of truth: the files
+    /// are stored in the .gh file and mirrored to a folder on disk. The mirroring is in
     /// ScriptProject.Disk.cs.
     /// </summary>
     internal sealed partial class ScriptProject
@@ -56,8 +56,8 @@ namespace PillScript.Scripting
             _files.Add(new ScriptFile(UsingsFile, ProjectTemplates.Usings));
             _files.Add(new ScriptFile(ProjectFile, ProjectTemplates.Project));
 
-            // Not put back by EnsureProjectFile: the build does not need it, so somebody who
-            // deletes it meant to.
+            // Not restored by EnsureProjectFile. The build does not need the readme, so a
+            // deletion is taken at face value.
             _files.Add(new ScriptFile(ReadmeFile, ProjectTemplates.Readme));
         }
 
@@ -71,7 +71,7 @@ namespace PillScript.Scripting
         public ScriptFile EntryFile
             => Find(DefaultEntry) ?? SourceFiles.FirstOrDefault() ?? _files.FirstOrDefault();
 
-        /// <summary>Identifies the exact source state, so a component knows when it is stale.</summary>
+        /// <summary>Identifies the exact source state, which is how a component detects staleness.</summary>
         public string Hash
         {
             get
@@ -86,7 +86,7 @@ namespace PillScript.Scripting
             }
         }
 
-        /// <summary>The Rhino side assemblies a script may use, which the compiler also takes.</summary>
+        /// <summary>The Rhino assemblies a script may use. ScriptCompiler is given the same list.</summary>
         public static IEnumerable<string> HostReferences() => ProjectTemplates.HostReferences();
 
         public ScriptFile Find(string name)
@@ -107,9 +107,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Adds an empty file and answers it, or null with a reason. It answers the file rather
-        /// than a flag because the name it ends up with need not be the name that was asked for:
-        /// a bare name gains an extension.
+        /// Adds an empty file and returns it, or returns null with a reason. It returns the file
+        /// because the resulting name can differ from the one asked for: a bare name gains an
+        /// extension.
         /// </summary>
         public ScriptFile AddFile(string name, out string error)
         {
@@ -158,9 +158,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// A file may be anything; what it may not be is somewhere else. Rejecting a path is what
-        /// keeps the mirror flat, which is what lets a name stand for a file without ambiguity.
-        /// A bare name with no extension at all becomes C#, since that is what it usually meant.
+        /// A file may have any name, but not a path. Rejecting paths keeps the mirror flat, which
+        /// is what lets a bare name identify a file unambiguously. A name with no extension at all
+        /// gets .cs, which is what it usually meant.
         /// </summary>
         static string Normalise(string name)
         {
@@ -170,13 +170,13 @@ namespace PillScript.Scripting
             if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
             if (name != Path.GetFileName(name)) return null;
 
-            // One project file, and it is the one already here.
+            // There is one project file and it already exists.
             if (name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)) return null;
 
             return Path.GetExtension(name).Length == 0 ? name + ".cs" : name;
         }
 
-        /// <summary>A copy to compile or restore on another thread while editing carries on here.</summary>
+        /// <summary>A snapshot to compile or restore on another thread while editing continues.</summary>
         public ScriptProject Clone()
         {
             var clone = new ScriptProject { Id = Id };
@@ -200,8 +200,8 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Puts back the two files the build cannot do without, for a document saved before they
-        /// existed or a folder somebody emptied.
+        /// Restores the two files the build requires, for a document saved before they existed or
+        /// a folder that was emptied.
         /// </summary>
         void EnsureProjectFile()
         {

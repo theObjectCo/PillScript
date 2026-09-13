@@ -1,7 +1,7 @@
-// The pieces every control is built from, and the ones that carry a number. Each builder answers
-// a node and a patch: the patch takes a fresh value and shows it without rebuilding, so a solve
-// arriving mid-drag does not pull the control out from under the pointer. Nothing here talks to
-// the host; panel.js hands each builder the way to speak.
+// The pieces every control is built from, and the controls that carry a number. Each builder
+// returns a node and a patch. The patch takes a new value and shows it without rebuilding, so a
+// solve arriving mid-drag does not pull the control out from under the pointer. Nothing here talks
+// to the host: panel.js passes each builder the function to send with.
 (function () {
   'use strict';
 

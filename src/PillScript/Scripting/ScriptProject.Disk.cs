@@ -8,12 +8,12 @@ namespace PillScript.Scripting
 {
     /// <summary>
     /// The mirror between the document and a folder on disk. It exists so an IDE can open the
-    /// project and so the SDK has something to restore against; the document stays the source of
-    /// truth, and anything written outside is read back in.
+    /// project and so the SDK has something to restore against. The document remains the source of
+    /// truth, and anything written to the folder from outside is read back in.
     /// </summary>
     internal sealed partial class ScriptProject
     {
-        /// <summary>Past this a file belongs on disk, not inside the document.</summary>
+        /// <summary>A file larger than this stays on disk and is not held in the document.</summary>
         const long LargestFile = 1024 * 1024;
 
         /// <summary>Folder the project is mirrored into, and where packages are restored.</summary>
@@ -40,7 +40,7 @@ namespace PillScript.Scripting
             WriteIfChanged(Path.Combine(folder, GeneratedTargets), ProjectTemplates.BuildTargets());
         }
 
-        /// <summary>Reads the working folder back in, for edits made outside the built in editor.</summary>
+        /// <summary>Reads the working folder back in, picking up edits made outside the editor.</summary>
         public bool PullFromDisk()
         {
             var folder = WorkingFolder;
@@ -50,7 +50,8 @@ namespace PillScript.Scripting
             var onDisk = EnumerateProjectFiles(folder)
                 .ToDictionary(Path.GetFileName, File.ReadAllText, StringComparer.OrdinalIgnoreCase);
 
-            // An empty folder is somebody else's doing, not an instruction to empty the script.
+            // An empty folder means something else removed the files, not that the script should
+            // be emptied.
             if (onDisk.Count == 0) return false;
 
             _files.RemoveAll(f => !onDisk.ContainsKey(f.Name));
@@ -61,9 +62,9 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// The project's own files: whatever sits in the folder itself, less the generated ones.
-        /// Build output is left out by only looking at the top level, since that all lives in
-        /// obj and bin.
+        /// The project's own files: the contents of the folder itself, minus the generated ones.
+        /// Only the top level is listed, which leaves out build output, since that all sits in obj
+        /// and bin.
         /// </summary>
         static IEnumerable<string> EnumerateProjectFiles(string folder)
             => Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
@@ -71,10 +72,10 @@ namespace PillScript.Scripting
                 .Where(CanCarry);
 
         /// <summary>
-        /// Whether a file can live inside the document. Everything here is held and mirrored as
-        /// text, so something that is not text would come back mangled, and a referenced DLL put
-        /// beside the project is exactly the kind of thing that would be. Anything this refuses is
-        /// left alone on disk rather than read in or deleted.
+        /// Whether a file can be held inside the document. Files are stored and mirrored as text,
+        /// so a binary would come back mangled; a referenced DLL sitting beside the project is the
+        /// usual case. A file that fails this check is left alone on disk, neither read in nor
+        /// deleted.
         /// </summary>
         static bool CanCarry(string path)
         {
@@ -88,7 +89,7 @@ namespace PillScript.Scripting
                 var block = new byte[(int)Math.Min(length, 4096)];
                 var read = stream.Read(block, 0, block.Length);
 
-                // A zero byte this early is what tells an assembly from a source file.
+                // A zero byte in the first block distinguishes an assembly from a source file.
                 for (var i = 0; i < read; i++)
                 {
                     if (block[i] == 0) return false;
@@ -98,14 +99,14 @@ namespace PillScript.Scripting
             }
             catch (Exception)
             {
-                // Locked, or gone between listing and opening. Either way, not ours to carry.
+                // Locked, or removed between the listing and the open. Not a file to take in.
                 return false;
             }
         }
 
         /// <summary>
-        /// Leaves a file alone when it already says this, so the timestamps an IDE and the SDK
-        /// both watch only move when something actually changed.
+        /// Skips the write when the file already holds this text, so the timestamps an IDE and
+        /// the SDK watch only move on a real change.
         /// </summary>
         static void WriteIfChanged(string path, string content)
         {

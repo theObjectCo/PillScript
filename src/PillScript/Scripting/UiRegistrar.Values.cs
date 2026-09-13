@@ -8,9 +8,9 @@ using Rhino.Geometry;
 namespace PillScript
 {
     /// <summary>
-    /// The other half of the registrar: what a control currently holds. The panel sends values
-    /// back as the plainest thing JSON carries, so each kind is read defensively and falls back to
-    /// what the script registered rather than throwing in the middle of a solve.
+    /// The other half of the registrar: the value a control currently holds. The panel sends
+    /// values back as the simplest type JSON carries, so each kind is read defensively and falls
+    /// back to the default the script registered instead of throwing during a solve.
     /// </summary>
     public sealed partial class UiRegistrar
     {
@@ -83,7 +83,7 @@ namespace PillScript
             return name != null && _values.TryGetValue(name, out value) && value != null;
         }
 
-        /// <summary>Three numbers separated by anything that is not one, as the document keeps them.</summary>
+        /// <summary>Three numbers separated by any non-numeric character, as the document has them.</summary>
         internal static Vector3d ParseVector(string text, Vector3d fallback)
         {
             if (string.IsNullOrWhiteSpace(text)) return fallback;
@@ -132,7 +132,7 @@ namespace PillScript
                 : "#" + colour.R.ToString("X2") + colour.G.ToString("X2") + colour.B.ToString("X2")
                       + colour.A.ToString("X2");
 
-        /// <summary>The buttons, which are cleared once the solve their press caused is over.</summary>
+        /// <summary>The buttons, cleared after the solve their press triggered.</summary>
         internal IEnumerable<string> Buttons
             => _controls.Where(c => c.Kind == "button").Select(c => c.Name);
     }

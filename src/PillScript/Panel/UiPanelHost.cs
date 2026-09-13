@@ -11,12 +11,12 @@ using Microsoft.Web.WebView2.Core;
 namespace PillScript.Panel
 {
     /// <summary>
-    /// The Rhino panel a script publishes its controls into. It is an Eto panel because that is
-    /// what Rhino 8 will construct: a Windows Forms control handed to RegisterPanel is accepted
-    /// and then quietly never built. Inside it there is nothing but a web view, so every control
-    /// a script declares is an HTML element and a script can restyle the lot with a ui.css.
+    /// The Rhino panel a script publishes its controls into. It is an Eto panel because Rhino 8
+    /// only constructs those: a Windows Forms control handed to RegisterPanel is accepted and then
+    /// never built. The panel holds a single web view, so every control a script declares is an
+    /// HTML element and a ui.css in the script project can restyle all of them.
     ///
-    /// The GUID is the panel's identity to Rhino, so it is fixed rather than generated.
+    /// Rhino identifies the panel by this GUID, which is why it is a constant.
     /// </summary>
     [Guid("3C9F2A17-5B84-46D2-9E1B-7A0C4D85F332")]
     public class UiPanelHost : Eto.Forms.Panel
@@ -49,10 +49,9 @@ namespace PillScript.Panel
         public static Guid PanelId => typeof(UiPanelHost).GUID;
 
         /// <summary>
-        /// Brings the panel up. Publishing a component otherwise looks like nothing happening:
-        /// the panel is registered from the moment Grasshopper loads, but it sits collapsed in
-        /// whichever group of tabs Rhino put it in, and somebody who has never opened it has no
-        /// reason to know where to look. Rhino leaves one that is already open where it is.
+        /// Brings the panel up. It is registered from the moment Grasshopper loads, but until it
+        /// is opened it sits collapsed in whichever tab group Rhino put it in, where publishing a
+        /// component would appear to do nothing. Rhino leaves an already open panel in place.
         /// </summary>
         public static void Show()
         {
@@ -67,10 +66,9 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// Eto.Wpf carries the bridge from a WPF element to an Eto control, and Rhino has it
-        /// loaded. It is reached by reflection rather than by reference on purpose: the plugin
-        /// must bind to whichever Eto the running Rhino ships, and compiling against a version
-        /// from elsewhere is how that goes wrong.
+        /// Eto.Wpf holds the bridge from a WPF element to an Eto control, and Rhino has it loaded
+        /// already. Reflection is deliberate here: the plugin has to bind to whichever Eto the
+        /// running Rhino ships, and a compile-time reference would pin it to another version.
         /// </summary>
         static Control Wrap(System.Windows.FrameworkElement element)
         {
@@ -122,7 +120,7 @@ namespace PillScript.Panel
             }
             catch (Exception exception)
             {
-                // A panel that throws while Rhino is docking it takes Rhino with it.
+                // An exception escaping while Rhino docks the panel brings Rhino down.
                 Rhino.RhinoApp.WriteLine("PillScript panel: " + exception.Message);
             }
         }
@@ -131,9 +129,9 @@ namespace PillScript.Panel
             => Refresh();
 
         /// <summary>
-        /// Redraws the panel. It arrives from a component's menu or from a document being opened,
-        /// both of which happen on the UI thread, but the check costs nothing and a panel that
-        /// throws takes Rhino with it.
+        /// Redraws the panel. Calls come from a component's menu or from a document being opened,
+        /// both on the UI thread, but the guard is cheap and an exception escaping here would bring
+        /// Rhino down.
         /// </summary>
         void Refresh()
         {
@@ -167,7 +165,7 @@ namespace PillScript.Panel
             }
         }
 
-        /// <summary>Sends what the published components currently declare and hold.</summary>
+        /// <summary>Sends the controls the published components declare and the values they hold.</summary>
         void Publish()
         {
             if (_web.CoreWebView2 == null) return;
@@ -184,8 +182,8 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// Puts a value onto the component it belongs to. The component decides when that becomes
-        /// a solve, so a slider being dragged does not solve forty times on the way.
+        /// Puts a value onto the component it belongs to. The component decides when that turns
+        /// into a solve, which is what keeps a slider drag down to one.
         /// </summary>
         static void Heard(System.Text.Json.JsonElement root)
         {
@@ -201,8 +199,8 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// Opens the colour picker Rhino uses everywhere else, rather than the browser's own: a
-        /// panel docked beside Layers should pick a colour the way Layers does.
+        /// Opens Rhino's own colour picker. The panel docks beside Layers and picking a colour
+        /// there works the same way.
         /// </summary>
         static void Pick(System.Text.Json.JsonElement root)
         {
@@ -221,8 +219,8 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// Takes the order the sections were dragged into. The page sends the whole list rather
-        /// than what moved, so the two ends cannot drift apart over a run of drags.
+        /// Takes the order the sections were dragged into. The page sends the whole list, not just
+        /// the section that moved, which keeps the two sides in step over a run of drags.
         /// </summary>
         static void Sort(System.Text.Json.JsonElement root)
         {
@@ -234,7 +232,7 @@ namespace PillScript.Panel
                 UiPublication.Find(id.GetString())?.SetOrder(index++);
         }
 
-        /// <summary>Rolls a section up or down, and keeps it that way in the document.</summary>
+        /// <summary>Rolls a section up or down and records the state in the document.</summary>
         static void Collapse(System.Text.Json.JsonElement root)
         {
             var component = UiPublication.Find(
@@ -248,9 +246,9 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// A JSON value as the plainest CLR type that carries it. A vector arrives as three
-        /// numbers and is kept as text, so that what the document stores stays three kinds wide
-        /// rather than growing one for every control that comes along.
+        /// A JSON value as the simplest CLR type that carries it. A vector arrives as three
+        /// numbers and is stored as text, which keeps the document format at three kinds: flag,
+        /// number and text.
         /// </summary>
         static object Plain(System.Text.Json.JsonElement value)
         {

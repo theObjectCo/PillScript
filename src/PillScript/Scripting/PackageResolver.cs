@@ -18,7 +18,7 @@ namespace PillScript.Scripting
 
         /// <summary>
         /// Records something the author has to fix. Everything resolving can complain about is
-        /// written in the project file, so that is where it is reported.
+        /// declared in the project file, so that file is named in the report.
         /// </summary>
         public void Fault(string severity, string id, string message)
             => Problems.Add(new CompileDiagnostic
@@ -33,9 +33,9 @@ namespace PillScript.Scripting
     }
 
     /// <summary>
-    /// Turns what the script's csproj references into assembly paths: plain DLLs by hint path,
-    /// neighbouring projects by building them, and NuGet packages by restoring them with the
-    /// .NET SDK when the list has changed since the last time.
+    /// Turns the references in the script's csproj into assembly paths. Plain DLLs come from
+    /// their hint path, neighbouring projects are built, and NuGet packages are restored with the
+    /// .NET SDK when the list has changed since the last restore.
     /// </summary>
     internal static class PackageResolver
     {
@@ -59,8 +59,8 @@ namespace PillScript.Scripting
             var stamp = Path.Combine(folder, "obj", StampFile);
             var wanted = string.Join(";", packages.OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
 
-            // Restoring takes seconds even when there is nothing to do, so the list it was last
-            // run for is written down and compared.
+            // A restore takes seconds even with nothing to do, so the list it last ran for is
+            // recorded and compared.
             if (!File.Exists(assets) || !File.Exists(stamp) || File.ReadAllText(stamp) != wanted)
             {
                 if (!Restore(folder, resolution)) return resolution;
@@ -92,8 +92,8 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Reference elements with a HintPath, which is how a script reaches a DLL that is not on
-        /// NuGet: another plugin's assembly, or a library sitting next to the definition.
+        /// Reference elements with a HintPath. This is how a script reaches a DLL that is not on
+        /// NuGet, such as another plugin's assembly or a library beside the definition.
         /// </summary>
         static void ReadDirectReferences(
             XDocument document, ScriptProject project, PackageResolution resolution)
@@ -187,7 +187,7 @@ namespace PillScript.Scripting
             resolution.CompileReferences.Add(target);
             resolution.RuntimeAssemblies.Add(target);
 
-            // Its own dependencies sit next to it, and the load context needs to find them too.
+            // Its own dependencies sit beside it, and the load context has to find those too.
             var folder = Path.GetDirectoryName(target);
             if (folder == null) return;
 

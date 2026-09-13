@@ -1,9 +1,9 @@
-// Dragging a section's heading moves it among the others. The order is the panel's own, not the
-// document's: scripts land on the canvas in whatever order they were written, and the order they
-// want to be read in is a different question. The host keeps it with the document.
+// Dragging a section's heading moves it among the others. The order belongs to the panel, not to
+// the document: the canvas order is the order the scripts were written in. The host stores the
+// panel order in the document.
 //
-// The same heading is also the thing that rolls a section up, so a press that never moved is left
-// alone for the click handler to deal with.
+// The same heading also rolls a section up, so a press that never moved is left to the click
+// handler.
 (function () {
   'use strict';
 
@@ -54,8 +54,8 @@
       from = event.clientY;
       moved = false;
 
-      // Not captured yet: capturing here would retarget the click that follows to this element,
-      // and the heading would never hear the press that was only meant to roll it up.
+      // No capture yet: capturing here would retarget the following click to this element, and
+      // the heading would never receive a press that was only meant to roll it up.
     });
 
     sections.addEventListener('pointermove', function (event) {
@@ -69,7 +69,7 @@
         carried.classList.add('carried');
 
         // Capture keeps the drag alive past the edges of the list. Without it the drag still
-        // works while the pointer stays inside, so a refusal is not worth giving up for.
+        // works while the pointer stays inside, so a failure here is ignored.
         try { sections.setPointerCapture(event.pointerId); } catch (ignored) { }
       }
 

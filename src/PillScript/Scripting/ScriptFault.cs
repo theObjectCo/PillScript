@@ -7,14 +7,14 @@ using System.Reflection;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// Says what went wrong in a script in the terms its author is working in: the exception that
-    /// was actually thrown, and the line of their own code it came from.
+    /// Reports a script failure in the author's own terms: the exception that was thrown, and the
+    /// line of the script it came from.
     /// </summary>
     internal static class ScriptFault
     {
         /// <summary>
-        /// Calling a script through reflection wraps whatever it threw. The wrapper says nothing
-        /// the author can act on, so it is stepped past.
+        /// Calling a script through reflection wraps whatever it threw. The wrapper carries
+        /// nothing the author can act on, so it is unwrapped.
         /// </summary>
         public static Exception Unwrap(Exception exception)
             => exception is TargetInvocationException invocation && invocation.InnerException != null
@@ -22,8 +22,9 @@ namespace PillScript.Scripting
                 : exception;
 
         /// <summary>
-        /// Names the exception and, when the script's own frames are in the trace, where it
-        /// happened. The scripts are compiled with debug information, so usually they are.
+        /// Names the exception and, when the script's own frames are in the trace, the line it
+        /// happened on. Scripts are compiled with debug information, so the frames are usually
+        /// there.
         /// </summary>
         public static string Describe(Exception exception)
         {

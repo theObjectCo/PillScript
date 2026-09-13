@@ -1,5 +1,5 @@
-// The pane along the bottom: what the script printed, what is wrong with it, and what its
-// variables held when it stopped.
+// The pane along the bottom: what the script printed, the problems reported against it, and the
+// values its variables held when it stopped.
 (function () {
   'use strict';
 
@@ -106,7 +106,7 @@
       return;
     }
 
-    // An error is worth interrupting for; a warning can wait until somebody looks.
+    // An error opens the pane. A warning waits until the pane is opened.
     if (errors > 0) SS.showTab('problems');
 
     items.forEach(function (item) { el['view-problems'].appendChild(problem(item)); });

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
-// An MCP server over stdio that forwards to the bridge inside Rhino. It is a separate process on
-// purpose: the tools stay listed whether or not Rhino is running, and a call made while it is
-// closed answers with a sentence saying so rather than the whole server failing to connect.
+// An MCP server over stdio that forwards to the bridge inside Rhino. Running it as a separate
+// process is deliberate: the tools stay listed whether or not Rhino is running, and a call made
+// while it is closed returns a sentence saying so instead of failing the whole connection.
 
 const http = require('http');
 
@@ -221,7 +221,7 @@ async function handle(message) {
     return;
   }
 
-  // Notifications carry no id and want no answer.
+  // Notifications carry no id and expect no answer.
   if (id === undefined || id === null) return;
 
   send({ jsonrpc: '2.0', id: id, error: { code: -32601, message: 'Unknown method: ' + method } });
@@ -251,13 +251,13 @@ process.stdin.on('data', chunk => {
       inFlight++;
       handle(JSON.parse(line)).then(settle, settle);
     } catch (error) {
-      // A line that is not a message is not something to answer.
+      // A line that is not a message is ignored.
       inFlight--;
     }
   }
 });
 
-// Waits for calls that are still with Rhino, so a request is never dropped on the way out.
+// Waits for calls still in flight to Rhino, so no request is dropped during shutdown.
 process.stdin.on('end', () => {
   ended = true;
   if (inFlight === 0) process.exit(0);

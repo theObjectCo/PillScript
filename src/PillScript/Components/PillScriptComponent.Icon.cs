@@ -9,17 +9,17 @@ using PillScript.Icons;
 namespace PillScript.Components
 {
     /// <summary>
-    /// The icon a component wears. A script does more than one thing over its life and the pill
-    /// says only that it is a script, so a component may be given any name out of the Phosphor
-    /// set instead. The same drawing goes on the canvas and at the head of its section in the
-    /// panel, which is what makes a panel of four scripts readable at a glance.
+    /// The component's icon. The pill says only that the component is a script, so a name from
+    /// the Phosphor set can be given instead. The same drawing appears on the canvas and at the
+    /// head of the component's section in the panel, which is what tells several sections apart.
     /// </summary>
     public partial class PillScriptComponent
     {
         static PillScriptComponent()
         {
-            // A fetch lands on a thread that may do nothing to the canvas, and the icon Grasshopper
-            // already asked for is cached, so the components wearing this name are told to forget.
+            // A fetch completes on a background thread, which may not touch the canvas, and
+            // Grasshopper caches the icon it already asked for. Both the components using this
+            // name and that cache are invalidated here, on the UI thread.
             PhosphorIcons.Arrived += name => Rhino.RhinoApp.InvokeOnUiThread(new Action(() =>
             {
                 foreach (var component in Wearing(name)) component.Redrawn();
@@ -32,10 +32,10 @@ namespace PillScript.Components
         string _iconName;
         Bitmap _drawn;
 
-        /// <summary>The Phosphor name this component wears, or null for the pill.</summary>
+        /// <summary>The Phosphor name set on this component, or null for the pill.</summary>
         internal string IconName => _iconName;
 
-        /// <summary>The drawing itself, for the panel, which shows it as it is rather than drawn.</summary>
+        /// <summary>The SVG source, for the panel, which renders it instead of using the bitmap.</summary>
         internal string IconSvg => _iconName == null ? null : PhosphorIcons.Svg(_iconName);
 
         protected override Bitmap Icon => Drawn() ?? ComponentIcon.Bitmap;
@@ -55,8 +55,8 @@ namespace PillScript.Components
         }
 
         /// <summary>
-        /// The canvas keeps the last icon it was given, so changing one means saying so twice:
-        /// once here and once to Grasshopper.
+        /// The canvas caches the last icon it was given, so a change has to be cleared twice:
+        /// the local bitmap here and Grasshopper's own cache.
         /// </summary>
         void Redrawn()
         {
@@ -67,8 +67,8 @@ namespace PillScript.Components
         }
 
         /// <summary>
-        /// Ink dark enough to read on the component's own grey. Null while the icon is being
-        /// fetched or if the catalogue has no such name, and then the pill stands in.
+        /// Drawn in an ink dark enough to read on the component's grey. Null while the icon is
+        /// still being fetched, or if the catalogue has no such name, and the pill is used then.
         /// </summary>
         Bitmap Drawn()
         {
@@ -98,13 +98,13 @@ namespace PillScript.Components
         }
 
         /// <summary>
-        /// A line to type the name on, in the menu itself. Nothing here knows which names exist,
-        /// and the set has nine thousand of them: one that turns out not to exist leaves the pill
-        /// and stays written down, so a typo is fixed by editing it rather than by guessing again.
+        /// A text box in the menu itself. The catalogue holds some nine thousand names and none
+        /// of them are known here, so a name that does not exist leaves the pill in place and stays
+        /// in the box, where a typo can be corrected.
         ///
-        /// Taken on Enter rather than on every keystroke, since each new name is a fetch. The menu
-        /// is not locked while the box has focus: locking it adds Commit and Cancel items of
-        /// Grasshopper's own, and Commit turned out not to reach this handler at all.
+        /// The name is taken on Enter, not on every keystroke, because each new name is a fetch.
+        /// The menu is not locked while the box has focus: locking it adds Grasshopper's own Commit
+        /// and Cancel items, and Commit never reached this handler.
         /// </summary>
         void AppendIconItem(ToolStripDropDown menu)
         {

@@ -7,10 +7,9 @@ using Rhino.Geometry;
 namespace PillScript
 {
     /// <summary>
-    /// What a script registers its panel controls through. Each call does two things at once: it
-    /// tells the panel what to draw, and it writes what that control is currently set to into the
-    /// variable handed to it. A control is declared and read in one line, and the code that uses
-    /// the value never looks anything up by name.
+    /// The object a script registers its panel controls through. Each call declares one control
+    /// for the panel to draw and assigns that control's current value to the out variable passed
+    /// in, so a control is declared and read in a single line:
     ///
     ///     register.Slider("radius", 1, 50, 10, out radius);
     ///
@@ -47,14 +46,14 @@ namespace PillScript
             current = AsNumber(name, value);
         }
 
-        /// <summary>A number typed in, with no bounds to drag between.</summary>
+        /// <summary>A number typed in, with no bounds.</summary>
         public void Number(string name, double value, out double current, string label = null)
         {
             Add(new UiControl { Kind = "number", Name = name, Label = label, Value = value });
             current = AsNumber(name, value);
         }
 
-        /// <summary>The same, rounded, for a control that stands for a count.</summary>
+        /// <summary>The same control, rounded to whole numbers, for counts.</summary>
         public void Whole(string name, int value, out int current, string label = null)
         {
             Add(new UiControl
@@ -69,7 +68,7 @@ namespace PillScript
             current = (int)Math.Round(AsNumber(name, value));
         }
 
-        /// <summary>A switch. The note goes beside it, where the label leaves a doubt.</summary>
+        /// <summary>A switch. The optional note is drawn beside it, for a label that needs one.</summary>
         public void Toggle(string name, bool value, out bool current,
                            string label = null, string note = null)
         {
@@ -77,7 +76,7 @@ namespace PillScript
             current = AsFlag(name, value);
         }
 
-        /// <summary>One of a list. The options may be worked out rather than written down.</summary>
+        /// <summary>One value out of a list. The options can be computed at registration time.</summary>
         public void Choice(
             string name, IEnumerable<string> options, out string current,
             string value = null, string label = null)
@@ -96,8 +95,8 @@ namespace PillScript
 
             var chosen = AsText(name, first);
 
-            // An option that has since been taken away falls back, rather than leaving the panel
-            // holding a value it cannot show.
+            // A held value whose option no longer exists falls back to the default. Otherwise
+            // the panel would hold a value it cannot draw.
             current = list.Count == 0 || list.Contains(chosen) ? chosen : first;
         }
 
@@ -115,7 +114,7 @@ namespace PillScript
             current = AsVector(name, value);
         }
 
-        /// <summary>A swatch that opens the colour picker Rhino uses everywhere else.</summary>
+        /// <summary>A swatch that opens Rhino's own colour picker.</summary>
         public void Colour(string name, Color value, out Color current, string label = null)
         {
             Add(new UiControl { Kind = "colour", Name = name, Label = label, Value = value });
@@ -123,13 +122,13 @@ namespace PillScript
         }
 
         /// <summary>
-        /// A layer of the Rhino document, by its full path. The list is read when the panel
-        /// draws, so layers added since do not need a recompile to show up.
+        /// A layer of the Rhino document, by its full path. The list is read each time the panel
+        /// draws, so a layer added after the last compile still appears.
         /// </summary>
         public void Layer(string name, out string current, string value = null, string label = null)
         {
-            // Nothing chosen means the layer the document is drawing on, which is what a bake
-            // would land on anyway, rather than an empty box that looks like a missing value.
+            // With nothing chosen the control shows the document's current layer, which is where
+            // a bake would land anyway. An empty box would read as a missing value.
             var start = value ?? Rhino.RhinoDoc.ActiveDoc?.Layers?.CurrentLayer?.FullPath ?? string.Empty;
 
             Add(new UiControl { Kind = "layer", Name = name, Label = label, Value = start });
@@ -137,10 +136,10 @@ namespace PillScript
         }
 
         /// <summary>
-        /// Something to press. It is true for the one solve the press caused and false on every
-        /// other, so a script can act on it without having to remember whether it already did.
-        /// A quiet one is drawn plainly, for the button standing beside the main action, and one
-        /// given an icon carries a glyph: bake, run, refresh, add or remove.
+        /// A button. The value is true for the single solve the press caused and false in every
+        /// other solve, so a script can act on it without tracking whether it already has. A quiet
+        /// button is drawn without emphasis, for a secondary action. An icon name draws a glyph:
+        /// bake, run, refresh, add or remove.
         /// </summary>
         public void Button(string name, out bool pressed,
                            string label = null, bool quiet = false, string icon = null)
@@ -164,7 +163,7 @@ namespace PillScript
 
         void Add(UiControl control)
         {
-            // A control that carries a value needs a name to carry it under. A caption does not.
+            // Captions carry no value, so they need no name to store it under.
             if (control.Kind != "caption" && string.IsNullOrWhiteSpace(control.Name)) return;
 
             _controls.Add(control);

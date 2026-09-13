@@ -15,8 +15,8 @@
   SS.applyProject = function (message) {
     state.files = message.files || [];
 
-    // The component owns the marks, so the page adopts whatever it reports rather than keeping
-    // its own idea of them across a reopen.
+    // The component owns the marks, so the page takes whatever it reports and keeps no copy of
+    // its own across a reopen.
     if (typeof message.breakpointsEnabled === 'boolean') {
       state.breakpointsEnabled = message.breakpointsEnabled;
     }
@@ -59,7 +59,7 @@
     Object.keys(state.models).forEach(SS.diagnose);
   };
 
-  /// Keeps an existing model where there is one, so undo history and folding survive a refresh.
+  /// Reuses an existing model, so undo history and folding survive a refresh.
   function adopt(file) {
     var existing = state.models[file.name];
 
@@ -68,8 +68,8 @@
       return;
     }
 
-    // Only C# is named, because that one is ours. Leaving the language out for the rest lets
-    // Monaco pick it from the file name, which is how a .md or a .json arrives coloured.
+    // Only C# is named here, since the editor registers that language itself. Leaving the rest
+    // unset lets Monaco pick from the file name, which is how a .md or .json arrives coloured.
     var language = file.language === 'csharp' ? SS.csharpId() : undefined;
 
     var model = state.monaco.editor.createModel(
@@ -161,8 +161,8 @@
     item.appendChild(label);
     item.onclick = function () { SS.open(file.name); };
 
-    // Script.cs, the project file and the global usings are what the build needs, so they cannot
-    // be renamed or deleted and are not offered as if they could.
+    // Script.cs, the project file and the global usings are required by the build. They cannot
+    // be renamed or deleted, so the menu does not offer either.
     if (file.locked) return item;
 
     label.ondblclick = function (event) {
@@ -222,7 +222,7 @@
     });
   };
 
-  /// Runs an inline text box once: Enter or losing focus commits, Escape puts the list back.
+  /// Runs an inline text box once. Enter or a lost focus commits, Escape restores the list.
   function edit(input, commit) {
     var done = false;
 

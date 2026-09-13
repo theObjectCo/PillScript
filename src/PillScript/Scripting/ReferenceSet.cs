@@ -8,9 +8,9 @@ using Microsoft.CodeAnalysis;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// The assemblies a script is compiled and completed against. The compiler and the language
-    /// service share this so that what the editor understands and what the component builds are
-    /// the same set, down to the package version.
+    /// The assemblies a script is compiled and completed against. ScriptCompiler and the language
+    /// service share this, so the editor and the build see the same set, down to the package
+    /// version.
     /// </summary>
     internal sealed class ReferenceSet
     {
@@ -24,16 +24,17 @@ namespace PillScript.Scripting
         public bool Failed => Problems.Any(p => p.Severity == "error");
 
         /// <summary>
-        /// The references worth naming: Rhino, the script API and whatever the project asked for.
-        /// The framework is left out because a list of three hundred entries tells nobody anything.
+        /// The references the window lists: Rhino, the script API and whatever the project asked
+        /// for. The framework assemblies are left out, since the list runs to three hundred entries
+        /// none of which a script author sets.
         /// </summary>
         public List<string> Names = new List<string>();
 
         /// <summary>
-        /// Resolves the project's references: the framework, the Rhino side assemblies the
-        /// generated import points at, and whatever restore produced. Sweeping in every assembly
-        /// the process happens to have loaded would pull in a second copy of the Rhino geometry
-        /// types from whichever other plugin brought its own.
+        /// Resolves the project's references: the framework, the Rhino assemblies the generated
+        /// import points at, and the output of the restore. Collecting every assembly loaded in
+        /// the process would pull in a second copy of the Rhino geometry types from any other
+        /// plugin that shipped its own.
         /// </summary>
         public static ReferenceSet Build(ScriptProject project)
         {
@@ -95,7 +96,7 @@ namespace PillScript.Scripting
             }
             catch (Exception)
             {
-                // An assembly that cannot be read is one the script simply will not see.
+                // An assembly that cannot be read is left out and the script does not see it.
                 return null;
             }
         }

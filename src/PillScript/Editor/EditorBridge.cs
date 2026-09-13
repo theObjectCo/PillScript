@@ -8,8 +8,8 @@ using PillScript.Scripting;
 namespace PillScript.Editor
 {
     /// <summary>
-    /// The part of the editor that only a window can do: move itself, dock, open a file dialog,
-    /// drive the canvas. The bridge routes the messages that need it here.
+    /// The operations that need a window: moving it, docking, opening a file dialog, driving the
+    /// canvas. The bridge routes the messages that need one here.
     /// </summary>
     internal interface IEditorShell
     {
@@ -26,9 +26,8 @@ namespace PillScript.Editor
     }
 
     /// <summary>
-    /// Carries messages between the page and the rest of the editor, and decides which half of
-    /// the editor each one belongs to: the view model for anything about the script, the shell
-    /// for anything about the window.
+    /// Carries messages between the page and the rest of the editor, and routes each one: the
+    /// view model handles anything about the script, the shell anything about the window.
     /// </summary>
     internal sealed class EditorBridge : IEditorChannel
     {
@@ -57,7 +56,7 @@ namespace PillScript.Editor
             _page.WebMessageReceived += OnMessage;
         }
 
-        /// <summary>Re-sends everything, for when the project changed behind the page's back.</summary>
+        /// <summary>Re-sends everything, for a project that changed without the page knowing.</summary>
         public void Refresh()
         {
             RefreshProject();
@@ -91,9 +90,9 @@ namespace PillScript.Editor
             }
             catch (Exception exception)
             {
-                // This runs on the UI thread with nothing above it to catch anything. An editor
-                // that throws here would end the Rhino session, so every failure stops at this
-                // line and is reported into the editor's own output pane instead.
+                // This runs on the UI thread with no handler above it. An exception escaping here
+                // would end the Rhino session, so every failure stops at this line and is reported
+                // into the editor's output pane.
                 Post(EditorPayloads.Log("Editor: " + exception.Message, "bad"));
             }
         }
@@ -127,7 +126,7 @@ namespace PillScript.Editor
                 {
                     var chosen = _shell.PickAssembly();
 
-                    // Closing the file dialog without choosing is not a failure.
+                    // Closing the file dialog without a choice is not a failure.
                     Reply(request.Id, string.IsNullOrEmpty(chosen)
                         ? EditorPayloads.Done()
                         : _model.AddLocalReference(chosen));
@@ -194,7 +193,8 @@ namespace PillScript.Editor
                     Reply(request.Id, await _model.DefineAsync(request.File, request.Text, request.Offset));
                     break;
 
-                // Not "references": that is the window listing what the project is built against.
+                // The name is not "references": that message asks the window for the list of
+                // assemblies the project is built against.
                 case "usages":
                     Reply(request.Id, await _model.ReferencesAsync(
                         request.File, request.Text, request.Offset));
@@ -234,8 +234,8 @@ namespace PillScript.Editor
             }
             catch (Exception)
             {
-                // The page has gone or is being torn down. Nothing above this can handle it, and
-                // an unhandled exception on the UI thread would end the Rhino session.
+                // The page is gone or is being torn down. There is no handler above this, and an
+                // unhandled exception on the UI thread would end the Rhino session.
             }
         }
     }

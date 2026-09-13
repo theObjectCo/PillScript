@@ -1,10 +1,10 @@
-// Draws what the published components declare and reports every change back. The host owns when a
-// change becomes a solve; this only says what was touched.
+// Draws what the published components declare and reports every change back. The host decides
+// when a change becomes a solve; this page only reports what was touched.
 //
-// A payload arrives after every solve, so redrawing the lot each time would take the control out
-// from under the pointer halfway through a drag. Instead the page keeps a patch for each control
-// and only rebuilds when the shape of the payload changes: a component published or gone, a
-// control added, a kind changed.
+// A payload arrives after every solve, and redrawing everything each time would pull a control out
+// from under the pointer mid-drag. Instead the page keeps a patch function per control and
+// rebuilds only when the shape of the payload changes: a component published or removed, a control
+// added, a kind changed.
 (function () {
   'use strict';
 
@@ -34,7 +34,7 @@
     };
   }
 
-  /// What the page has to be rebuilt for. Values are deliberately not part of it.
+  /// The parts of a payload that force a rebuild. Values are deliberately excluded.
   function shapeOf(payload) {
     return (payload.sections || []).map(function (section) {
       return section.component + ':' + (section.widgets || []).map(function (w) {
@@ -43,8 +43,8 @@
     }).join(';');
   }
 
-  // The icon a component wears: the drawing it was given, or the pill. A Phosphor icon arrives as
-  // its own SVG and is put in as it stands, since it already paints itself in currentColor.
+  // The component's icon: the drawing it was given, or the pill. A Phosphor icon arrives as SVG
+  // and is inserted unchanged, since it already paints itself in currentColor.
   function badge(svg) {
     if (svg) {
       var held = document.createElement('div');
@@ -163,8 +163,8 @@
     list.forEach(function (section) { sections.appendChild(build(section)); });
   }
 
-  /// The same payload against a page that already has the right controls on it. A control the
-  /// pointer or the caret is in is left alone: it already shows what the host is being told.
+  /// Applies a payload to a page that already has the right controls. A control holding the
+  /// pointer or the caret is skipped, since it already shows the value the host is being sent.
   function patch(payload) {
     (payload.sections || []).forEach(function (section) {
       (section.widgets || []).forEach(function (widget) {
@@ -216,8 +216,8 @@
       patch(payload);
     }
 
-    // Rolled up or down says nothing about the shape, so a section that changed while the page
-    // was only patching would otherwise keep the state it was drawn with.
+    // The collapsed flag is not part of the shape, so without this a section whose state changed
+    // during a patch would keep the state it was drawn with.
     fold(payload);
     chrome(payload);
   }

@@ -36,7 +36,7 @@ namespace PillScript.Scripting
 
     /// <summary>
     /// Compiles the project's sources into one collectible assembly with Roslyn. Compilation is
-    /// explicit: nothing here runs as part of a Grasshopper solution.
+    /// explicit, and nothing here runs as part of a Grasshopper solution.
     /// </summary>
     internal static class ScriptCompiler
     {
@@ -46,7 +46,7 @@ namespace PillScript.Scripting
         {
             var result = new CompileResult();
 
-            // The mirror is what restore and any external IDE read, so it goes out first.
+            // The restore and any external IDE read the mirror, so it is written first.
             project.MirrorToDisk();
 
             var started = System.Diagnostics.Stopwatch.StartNew();
@@ -58,7 +58,7 @@ namespace PillScript.Scripting
             if (references.Failed) return result;
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
-            // GlobalUsings.cs is an ordinary source file now, so it arrives with the rest.
+            // GlobalUsings.cs is an ordinary source file and arrives with the rest.
             var trees = new List<SyntaxTree>();
 
             foreach (var file in project.SourceFiles)
@@ -119,8 +119,8 @@ namespace PillScript.Scripting
         }
 
         /// <summary>
-        /// Compiles the breakpoints into the script. Done on the finished compilation because the
-        /// rewriter needs a semantic model to know which locals it may read.
+        /// Compiles the breakpoints into the script. It runs on the finished compilation because
+        /// the rewriter needs a semantic model to know which locals it may read.
         /// </summary>
         static CSharpCompilation Instrument(
             CSharpCompilation compilation, IReadOnlyDictionary<string, IReadOnlyList<int>> breakpoints)

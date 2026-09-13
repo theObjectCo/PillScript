@@ -1,18 +1,18 @@
 /* The shell: the bars top and bottom, and the card each script gets. The controls themselves are
    in controls.css.
 
-   A published component may carry a ui.css of its own; the host sends it across and the page
-   appends it after these, so the author's rules win by cascade order rather than by fighting for
+   A published component may carry a ui.css of its own. The host sends it across and the page
+   appends it after these rules, so the author's rules win on cascade order and need no extra
    specificity.
 
-   The rules the layout keeps to: the label column is 80px and one colour, never coloured by type;
-   controls are 26px tall with 9px between them and 34px group headings; the accent is the
-   #1b8fe0 to #0a5f9e gradient and marks only what is active or primary; red belongs to the pill
-   and to errors; the x, y and z of a vector carry Rhino's own red, green and blue. */
+   The layout rules: the label column is 80px wide and always one colour, never coloured by type;
+   controls are 26px tall with 9px between them and 34px group headings; the accent is the #1b8fe0
+   to #0a5f9e gradient and marks only what is active or primary; red belongs to the pill and to
+   errors; the x, y and z of a vector carry Rhino's own red, green and blue. */
 
-/* Numbers are set in JetBrains Mono, carried in the package rather than fetched: a panel docked
-   in Rhino should not want the network to draw itself. Latin subset, the weight axis covering 400
-   to 500, under the SIL Open Font Licence kept beside it in fonts/. */
+/* Numbers are set in JetBrains Mono, shipped in the package instead of fetched, so a panel docked
+   in Rhino draws itself with no network. Latin subset, weight axis 400 to 500, under the SIL Open
+   Font Licence kept beside it in fonts/. */
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
@@ -169,7 +169,7 @@ body { display: flex; flex-direction: column; }
 
 .head:hover { background: var(--headLit); }
 
-/* The pill paints itself; an icon a component was given takes the colour from here. */
+/* The pill paints itself. A Phosphor icon takes its colour from here. */
 .head > .glyph { color: var(--ink); }
 
 .head .title {
@@ -203,7 +203,7 @@ body { display: flex; flex-direction: column; }
 .section.shut .body { display: none; }
 .section.shut { box-shadow: none; }
 
-/* While a section is being dragged into place among the others. */
+/* Applied to a section while it is being dragged into place among the others. */
 .section.carried { opacity: 0.75; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5); }
 .section.carried .head { background: var(--headLit); cursor: grabbing; }
 

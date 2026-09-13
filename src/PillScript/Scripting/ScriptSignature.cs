@@ -31,7 +31,7 @@ namespace PillScript.Scripting
             _ => GH_ParamAccess.item
         };
 
-        /// <summary>Identity used to decide whether a rebuilt parameter can keep its wires.</summary>
+        /// <summary>The identity that decides whether a rebuilt parameter keeps its wires.</summary>
         public string Signature => $"{Name}:{ElementType.FullName}:{Access}";
     }
 

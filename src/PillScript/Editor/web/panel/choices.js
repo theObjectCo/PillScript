@@ -1,4 +1,4 @@
-// The controls that pick something rather than carry a number, and the row a run of buttons
+// The controls that pick a value instead of carrying a number, and the row a run of buttons
 // shares. They follow the same contract as the ones in controls.js: a node and a patch.
 (function () {
   'use strict';
@@ -30,9 +30,8 @@
     };
   };
 
-  // A list of the panel's own rather than a select element. The dropdown a select opens is a
-  // window of its own, and a window opened from a docked panel is at the mercy of whatever Rhino
-  // does with focus; this one is drawn in the page and cannot be taken away.
+  // A list drawn in the page instead of a select element. The dropdown a select opens is a
+  // separate window, and one opened from a docked panel closes as soon as Rhino moves focus.
   function dropdown(w, options, send, show) {
     var read = show || function (value) { return value; };
 
@@ -106,7 +105,7 @@
     };
   }
 
-  // Up to three short options are worth showing all at once; anything longer is a list.
+  // Up to three short options are drawn as a segmented control. Anything longer becomes a list.
   SP.builders.choice = function (w, send) {
     var options = w.options || [];
 
@@ -153,12 +152,12 @@
   SP.builders.layer = function (w, send, ask, state) {
     var layers = state.layers || [];
 
-    // A layer since renamed or deleted would leave the box blank, which reads as a missing value
-    // rather than a stale one, so it is kept in the list.
+    // A layer that has been renamed or deleted would leave the box blank, which reads as a
+    // missing value, so the stored name is kept in the list.
     if (w.value && layers.indexOf(w.value) < 0) layers = [w.value].concat(layers);
 
-    // Rhino writes a nested layer as Parent::Child; the panel gives the colons room to breathe,
-    // and sends back the path as the document has it.
+    // Rhino writes a nested layer as Parent::Child. The panel spaces the colons for legibility
+    // and sends the path back exactly as the document has it.
     return dropdown(
       { name: w.name, label: w.label, value: w.value || layers[0] || '' }, layers, send,
       function (path) { return path.split('::').join(' :: '); });
@@ -177,7 +176,7 @@
     remove: 'M6 12h12'
   };
 
-  // A run of buttons becomes one row across the card, the way a dialog puts its actions.
+  // A run of buttons becomes one row across the card, as a dialog lays out its actions.
   SP.buttons = function (widgets, send) {
     var holder = SP.el('div', 'buttons');
 

@@ -8,12 +8,12 @@ using PillScript.Scripting;
 namespace PillScript.Components
 {
     /// <summary>
-    /// The half of the component that turns sources into a running build: when it is out of date,
-    /// what compiling it does to the canvas, and where the script pauses.
+    /// The part of the component that turns sources into a running build: how staleness is
+    /// detected, what compiling does to the canvas, and where the script pauses.
     /// </summary>
     public partial class PillScriptComponent
     {
-        /// <summary>True when the sources have moved on from the build that is loaded.</summary>
+        /// <summary>True when the sources have changed since the loaded build was compiled.</summary>
         internal bool IsStale => _compiled == null || _compiled.SourceHash != Project.Hash;
 
         internal bool IsCompiling => _compiling;
@@ -22,8 +22,8 @@ namespace PillScript.Components
         internal IReadOnlyDictionary<string, IReadOnlyList<int>> Breakpoints => _breakpoints;
 
         /// <summary>
-        /// Whether the marks are compiled in. Turning them off leaves them on screen but builds a
-        /// script that runs straight through, which is what one wants after finding the bug.
+        /// Whether the marks are compiled in. Turning them off keeps them visible in the editor
+        /// and builds a script that runs through without pausing.
         /// </summary>
         internal bool BreakpointsEnabled { get; private set; } = true;
 
@@ -33,7 +33,7 @@ namespace PillScript.Components
         /// <summary>How the last build went, for the editor's status bar.</summary>
         internal string LastBuild { get; private set; } = "Not compiled";
 
-        /// <summary>Raised with progress worth showing in the editor's output pane.</summary>
+        /// <summary>Raised with progress messages for the editor's output pane.</summary>
         internal event Action<string, string> Logged;
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace PillScript.Components
                 })));
         }
 
-        /// <summary>A compiler that threw is reported the same way as code that did not build.</summary>
+        /// <summary>An exception from the compiler is reported like code that did not build.</summary>
         static CompileResult Failed(Exception exception)
         {
             var result = new CompileResult();
@@ -109,15 +109,15 @@ namespace PillScript.Components
             _compiled?.Dispose();
             _compiled = result.Script;
 
-            // A compile can have restored packages, so the language service needs the new
-            // reference set as much as the next build does.
+            // A compile may have restored packages, so the language service is given the new
+            // reference set as well.
             Language.Invalidate(Project);
             _watcher.Start();
 
             ParameterLayout.Apply(this, _compiled.Signature, FixedOutputs);
             ClearRuntimeMessages();
 
-            // The controls come out of the build, so a new build may be a different panel.
+            // The controls come out of the build, so a new build can change the panel.
             if (IsPublished) AnnouncePublished();
 
             ExpireSolution(true);
@@ -137,7 +137,7 @@ namespace PillScript.Components
             Discard();
         }
 
-        /// <summary>Turns every mark on or off at once, without losing where they are.</summary>
+        /// <summary>Turns every mark on or off at once, keeping their positions.</summary>
         internal void SetBreakpointsEnabled(bool enabled)
         {
             if (BreakpointsEnabled == enabled) return;
@@ -146,7 +146,7 @@ namespace PillScript.Components
             Discard();
         }
 
-        /// <summary>Throws the build away, because the pauses are compiled into it.</summary>
+        /// <summary>Discards the build, since the pauses are compiled into it.</summary>
         void Discard()
         {
             _compiled?.Dispose();

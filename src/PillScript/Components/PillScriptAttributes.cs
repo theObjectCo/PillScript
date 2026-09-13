@@ -8,15 +8,15 @@ namespace PillScript.Components
 {
     /// <summary>
     /// Draws the component, and lays a plate under it while its editor window is open. On a canvas
-    /// with several script components that is the only way to tell which one the editor in front of
-    /// you belongs to.
+    /// with several script components the plate is what identifies the one the open editor belongs
+    /// to.
     ///
-    /// The plate is halved down the middle and wears the two colours of the pill, so what the
-    /// canvas shows and what the icon shows are recognisably the same thing.
+    /// The plate is split down the middle and painted in the two colours of the pill, which ties it
+    /// to the icon.
     /// </summary>
     internal sealed class PillScriptAttributes : GH_ComponentAttributes
     {
-        // The body colours of the two halves of the capsule, taken from the middle of the
+        // The body colours of the two halves of the capsule, sampled from the middle of the
         // gradients the icPill symbol is painted with.
         static readonly Color Left = Color.FromArgb(0x1A, 0x44, 0xB4);
         static readonly Color Right = Color.FromArgb(0xC0, 0x24, 0x14);
@@ -30,7 +30,7 @@ namespace PillScript.Components
         protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel)
         {
             // Painted before the component so the capsule sits on top of it, which is what makes
-            // it read as a plate rather than as a box drawn over the wires.
+            // it read as a plate under the component instead of a box over the wires.
             if (channel == GH_CanvasChannel.Objects && Owner.IsEditorOpen)
             {
                 var plate = Rectangle.Round(Bounds);
@@ -60,9 +60,9 @@ namespace PillScript.Components
         }
 
         /// <summary>
-        /// Fills the part of the plate that falls on one side of the middle. The clip is narrowed
-        /// rather than replaced, so whatever the canvas had already masked off stays masked off,
-        /// and it is put back afterwards.
+        /// Fills the part of the plate on one side of the middle. The clip is narrowed instead of
+        /// replaced, so anything the canvas had already masked off stays masked off, and the
+        /// original clip is restored afterwards.
         /// </summary>
         static void Half(Graphics graphics, GraphicsPath plate, Rectangle side, Color colour)
         {

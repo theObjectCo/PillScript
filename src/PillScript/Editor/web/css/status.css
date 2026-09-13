@@ -64,6 +64,6 @@
 
 .menu-item:hover { background: var(--selected); color: #ffffff; }
 
-/* A disabled mark stays where it was put, drawn hollow rather than filled. */
+/* A disabled mark stays where it was set and is drawn hollow instead of filled. */
 .breakpoint-glyph.off::after { background: transparent; border: 1.5px solid var(--error); }
 .breakpoint-line.off { background: transparent; }

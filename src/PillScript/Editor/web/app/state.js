@@ -1,5 +1,5 @@
 // What every part of the editor shares: the elements it draws into, the state it draws from, and
-// the table the host's messages are routed through. Loaded first, so the rest can assume it.
+// the table the host's messages are routed through. Loaded first, so the rest can rely on it.
 (function () {
   'use strict';
 
@@ -17,7 +17,7 @@
     active: null,
 
     // Set while a rename or an add is in flight, so the new file is the one opened when the
-    // project comes back.
+    // project arrives back.
     pendingActive: null,
 
     breakpoints: {},
@@ -52,7 +52,7 @@
     return name.slice(-3).toLowerCase() === '.cs';
   };
 
-  /// The language id Monaco knows our C# by, once csharp.js has registered it.
+  /// The language id Monaco knows this C# by, once csharp.js has registered it.
   SS.csharpId = function () {
     return window.csharpLanguage.id;
   };

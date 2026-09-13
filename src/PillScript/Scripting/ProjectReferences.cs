@@ -20,9 +20,9 @@ namespace PillScript.Scripting
     }
 
     /// <summary>
-    /// Reads and edits the references in the script's csproj: assemblies pointed at by path, and
-    /// packages fetched from NuGet. This is the editing side of what PackageResolver reads when
-    /// it builds, so both work on the one file the user can also open in an IDE.
+    /// Reads and edits the references in the script's csproj: assemblies given by path, and
+    /// packages fetched from NuGet. PackageResolver reads the same file when it builds, so both
+    /// work on the one csproj that an IDE can also open.
     /// </summary>
     internal static class ProjectReferences
     {
@@ -117,7 +117,7 @@ namespace PillScript.Scripting
 
             if (existing != null)
             {
-                // Naming a package that is already there is how its version gets changed.
+                // Adding a package that is already listed changes its version.
                 existing.SetAttributeValue("Version", Clean(version));
                 return Save(project, document);
             }
@@ -154,7 +154,7 @@ namespace PillScript.Scripting
             catch (Exception) { return null; }
         }
 
-        /// <summary>Writes the project back. Answers null when it went through, a reason when not.</summary>
+        /// <summary>Writes the project back. Returns null on success and a reason on failure.</summary>
         static string Save(ScriptProject project, XDocument document)
         {
             try
@@ -171,7 +171,7 @@ namespace PillScript.Scripting
         static IEnumerable<XElement> Elements(XDocument document, string name)
             => document.Descendants().Where(e => e.Name.LocalName == name).ToList();
 
-        /// <summary>Takes the last ItemGroup, or starts one when the project has none.</summary>
+        /// <summary>Returns the last ItemGroup, creating one when the project has none.</summary>
         static XElement Group(XDocument document)
         {
             var group = document.Root.Elements().LastOrDefault(e => e.Name.LocalName == "ItemGroup");

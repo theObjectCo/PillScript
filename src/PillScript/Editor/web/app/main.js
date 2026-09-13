@@ -1,5 +1,5 @@
-// Starting Monaco and handing it to the rest of the page. Loaded last, once every module has
-// registered what it answers.
+// Starts Monaco and hands it to the rest of the page. Loaded last, once every module has
+// registered its handlers.
 (function () {
   'use strict';
 
@@ -68,7 +68,7 @@
     SS.applyLayout();
     SS.send({ type: 'ready' });
 
-    // Opened in a browser rather than in Rhino, which is how the page is worked on.
+    // Opened in a browser instead of in Rhino, which is how the page itself is developed.
     if (!SS.hosted) showSample();
   });
 

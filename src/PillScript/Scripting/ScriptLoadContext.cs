@@ -8,8 +8,8 @@ namespace PillScript.Scripting
 {
     /// <summary>
     /// A collectible context for one compiled script. Every recompile gets a fresh one and the
-    /// previous is unloaded, which is what keeps a long editing session from growing a new copy
-    /// of the script assembly on each press of Compile.
+    /// previous one is unloaded, which is what stops a long editing session from accumulating a
+    /// copy of the script assembly per Compile.
     /// </summary>
     internal sealed class ScriptLoadContext : AssemblyLoadContext
     {
@@ -33,9 +33,9 @@ namespace PillScript.Scripting
 
         protected override Assembly Load(AssemblyName assemblyName)
         {
-            // Returning null sends the lookup to the default context, where Rhino, Grasshopper
-            // and the framework already live. Loading a second copy of those here would make
-            // RhinoCommon types coming out of the script incompatible with the host.
+            // Returning null sends the lookup to the default context, which already holds Rhino,
+            // Grasshopper and the framework. A second copy loaded here would make the RhinoCommon
+            // types coming out of the script incompatible with the host's.
             if (_probing.TryGetValue(assemblyName.Name ?? string.Empty, out var path))
             {
                 try { return LoadFromAssemblyPath(path); }

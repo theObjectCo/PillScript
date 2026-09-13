@@ -17,10 +17,10 @@ namespace PillScript
         public int Iteration { get; internal set; }
 
         /// <summary>
-        /// Registers the controls this script wants in the Rhino panel, and receives what they
-        /// are currently set to. Override it, call the registrar, and turn Publish to panel on in
-        /// the component's menu. It runs before every solve, so the variables it writes into hold
-        /// what the panel holds.
+        /// Registers the controls this script contributes to the Rhino panel and receives the
+        /// values they currently hold. Override it, call the registrar, and turn Publish to panel
+        /// on in the component's menu. It runs before every solve, so the variables it writes into
+        /// hold what the panel holds.
         /// </summary>
         public virtual void RegisterUi(UiRegistrar register) { }
 
@@ -34,8 +34,8 @@ namespace PillScript
 
         /// <summary>Writes a formatted line to the component's output panel.</summary>
         /// <summary>
-        /// With arguments this formats; without any it prints the string as it stands. Without
-        /// that check a line holding a brace, which any bit of JSON does, throws instead of
+        /// With arguments the text is formatted; with none it is printed as it stands. Without
+        /// that check a line containing a brace, as any piece of JSON does, throws instead of
         /// printing.
         /// </summary>
         public void Print(string format, params object[] args)

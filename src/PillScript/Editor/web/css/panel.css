@@ -63,7 +63,7 @@
 .log .time { color: #55575f; flex: none; }
 
 /* A flex item will not wrap until it is allowed to be narrower than its content, which is what
-   min-width does here. Without it the line pushes sideways and the Wrap button looks broken. */
+   min-width does here. Without it the line extends sideways and the Wrap button has no effect. */
 .log .text {
   flex: 1;
   min-width: 0;

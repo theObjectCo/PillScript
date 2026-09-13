@@ -12,9 +12,9 @@ using PillScript.Components;
 namespace PillScript.Editor
 {
     /// <summary>
-    /// The window the editor lives in. It hosts the page, decides where it sits on the screen or
-    /// in the Grasshopper window, and answers the few requests only a window can answer. Anything
-    /// about the script itself belongs to the view model, which the bridge reaches.
+    /// The window the editor runs in. It hosts the page, places it on the screen or inside the
+    /// Grasshopper window, and handles the few requests that need a window. Everything about the
+    /// script itself is in the view model, which the bridge calls into.
     /// </summary>
     internal sealed class ScriptEditorWindow : Window, IEditorShell
     {
@@ -44,9 +44,9 @@ namespace PillScript.Editor
             Background = new SolidColorBrush(Color.FromRgb(0x18, 0x18, 0x18));
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-            // Owned by Rhino rather than topmost: an owned window sits above its owner and only
-            // its owner, so it stays over the canvas, hides when Rhino is minimised, and does not
-            // float over whatever else is on the screen.
+            // Owned by Rhino instead of topmost. An owned window sits above its owner and
+            // nothing else, so it stays over the canvas, hides when Rhino is minimised and does
+            // not float over other applications.
             var owner = Rhino.RhinoApp.MainWindowHandle();
             if (owner != IntPtr.Zero) new WindowInteropHelper(this).Owner = owner;
 
@@ -59,7 +59,7 @@ namespace PillScript.Editor
 
             Content = _surface;
 
-            // The page draws its own title bar, so the system one is taken away.
+            // The page draws its own title bar, so the system one is removed.
             WindowStyle = WindowStyle.None;
             ResizeMode = ResizeMode.CanResize;
             WindowChrome.SetWindowChrome(this, Chrome());
@@ -75,8 +75,8 @@ namespace PillScript.Editor
 
             Closing += (_, __) =>
             {
-                // Leaving the host here rather than on Closed, because by then the window handle
-                // is gone and Grasshopper would keep a child that never tidied itself away.
+                // Leaving the host here and not on Closed: by then the window handle is gone and
+                // Grasshopper would be left holding a child that was never detached.
                 try { _dock.Release(); }
                 catch (Exception) { }
             };
@@ -172,8 +172,8 @@ namespace PillScript.Editor
         }
 
         /// <summary>
-        /// Centred on the whole canvas the component would sit behind a docked editor, so the view
-        /// is nudged by half the width the editor covers.
+        /// Centring on the whole canvas would put the component behind a docked editor, so the
+        /// view is offset by half the width the editor covers.
         /// </summary>
         public void Locate()
         {
@@ -198,16 +198,16 @@ namespace PillScript.Editor
         }
 
         /// <summary>
-        /// Docks and undocks in the order the window frame can survive. WindowChrome talks to the
-        /// desktop compositor about the frame, and a child window has no frame to talk about, so
-        /// the chrome comes off before the window becomes a child and goes back on only once it
-        /// is a window in its own right again. Doing it the other way round throws inside WPF.
+        /// Docks and undocks in the order the window frame survives. WindowChrome negotiates the
+        /// frame with the desktop compositor, and a child window has no frame, so the chrome is
+        /// removed before the window becomes a child and restored only once it is a top level
+        /// window again. The other order throws inside WPF.
         /// </summary>
         public void ApplyDock(bool onLeft)
         {
             if (_dock.IsDocked)
             {
-                // Asking for the side it is already on means asking for it back as a window.
+                // Choosing the side it is already docked to undocks it back into a window.
                 if (_dock.OnLeft == onLeft) Float();
                 else _dock.SetSide(onLeft);
 

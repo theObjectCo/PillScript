@@ -9,11 +9,11 @@ using System.Xml.Linq;
 namespace PillScript.Icons
 {
     /// <summary>
-    /// Turns an icon's drawing into the bitmap Grasshopper wants on the canvas.
+    /// Turns an icon's drawing into the bitmap Grasshopper draws on the canvas.
     ///
-    /// WPF is already here for the editor, and its path mini-language is the same one SVG uses,
-    /// so Geometry.Parse reads a d attribute as it stands. That is the whole of the work: these
-    /// icons are filled outlines on a 256 square and carry no gradients, strokes or text.
+    /// WPF is already loaded for the editor, and its path mini-language is the one SVG uses, so
+    /// Geometry.Parse reads a d attribute unchanged. That covers the whole file: these icons are
+    /// filled outlines on a 256 square with no gradients, strokes or text.
     /// </summary>
     internal static class SvgRaster
     {
@@ -25,7 +25,8 @@ namespace PillScript.Icons
             }
             catch (Exception)
             {
-                // A drawing this cannot read is not a reason to leave a component without an icon.
+                // A drawing that fails to parse falls back to the pill, leaving the component
+                // with an icon.
                 return null;
             }
         }
@@ -40,7 +41,7 @@ namespace PillScript.Icons
 
             foreach (var element in root.Descendants().Where(e => e.Name.LocalName == "path"))
             {
-                // The transparent square the set puts behind every icon is not part of it.
+                // The set puts a transparent square behind every icon, which is not part of it.
                 if ((string)element.Attribute("fill") == "none") continue;
 
                 var d = (string)element.Attribute("d");
@@ -91,8 +92,8 @@ namespace PillScript.Icons
         }
 
         /// <summary>
-        /// Through a PNG in memory, which is the one conversion that keeps the transparency both
-        /// halves of the framework agree on.
+        /// Through a PNG in memory. That is the one conversion where the transparency survives
+        /// the crossing between WPF and System.Drawing.
         /// </summary>
         static Bitmap ToBitmap(BitmapSource source)
         {

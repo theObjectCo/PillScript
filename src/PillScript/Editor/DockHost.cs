@@ -9,10 +9,10 @@ using Grasshopper;
 namespace PillScript.Editor
 {
     /// <summary>
-    /// Puts the editor window inside the Grasshopper window as a child, taking a strip down one
-    /// side of the canvas, and puts it back when asked. The canvas keeps its full size underneath;
-    /// what changes is that the editor is clipped to Grasshopper, moves with it and cannot be
-    /// lost behind it.
+    /// Makes the editor window a child of the Grasshopper window, occupying a strip down one
+    /// side of the canvas, and undocks it again on request. The canvas keeps its full size
+    /// underneath. While docked the editor is clipped to Grasshopper, moves with it and cannot end
+    /// up behind it.
     /// </summary>
     internal sealed class DockHost
     {
@@ -44,9 +44,9 @@ namespace PillScript.Editor
         public bool OnLeft { get; private set; }
 
         /// <summary>
-        /// The width the editor is actually drawn at, in real pixels. The splitter measures from
-        /// this rather than from the window's own width, which WPF reports in units that are a
-        /// display scale away from the ones every other number here is in.
+        /// The width the editor is drawn at, in device pixels. The splitter measures against
+        /// this. The window's own Width is in WPF units, which differ from device pixels by the
+        /// display scale, while every other number here is in device pixels.
         /// </summary>
         public int CurrentWidth { get; private set; }
 
@@ -68,7 +68,7 @@ namespace PillScript.Editor
             _floating = new Rect(_window.Left, _window.Top, _window.Width, _window.Height);
             _style = GetWindowLong(_handle, GwlStyle);
 
-            // A child has no frame of its own: it is sized by the splitter and by its parent.
+            // A child window has no frame. Its size comes from the splitter and the parent.
             SetWindowLong(_handle, GwlStyle, (_style & ~WsPopup & ~WsThickFrame) | WsChild);
             SetParent(_handle, _host.Handle);
 
@@ -90,7 +90,7 @@ namespace PillScript.Editor
             Release();
             SetWindowLong(_handle, GwlStyle, _style);
 
-            // The owner is re-applied because detaching cleared it along with the child bit.
+            // Detaching cleared the owner along with the child style, so it is set again.
             var owner = Rhino.RhinoApp.MainWindowHandle();
             if (owner != IntPtr.Zero) new WindowInteropHelper(_window).Owner = owner;
 
@@ -109,9 +109,9 @@ namespace PillScript.Editor
         }
 
         /// <summary>
-        /// Detaches from Grasshopper and repaints the area the editor was covering. Used on its
-        /// own when the window is closing, where there is no point putting it back where it used
-        /// to float, but every point in leaving the canvas whole.
+        /// Detaches from Grasshopper and repaints the area the editor was covering. Called on its
+        /// own while the window is closing, where restoring the floating position would be
+        /// pointless and the canvas still has to be left clean.
         /// </summary>
         public void Release()
         {
@@ -130,8 +130,8 @@ namespace PillScript.Editor
 
             SetParent(_handle, IntPtr.Zero);
 
-            // Windows does not repaint what a departing child was covering, so Grasshopper is
-            // asked to, or the canvas keeps a rectangle of stale pixels until it is panned.
+            // Windows does not repaint the area a departing child was covering. Without this the
+            // canvas keeps a rectangle of stale pixels until it is panned.
             try
             {
                 canvas?.Invalidate(true);
@@ -140,7 +140,7 @@ namespace PillScript.Editor
             }
             catch (Exception)
             {
-                // Repainting is a courtesy; failing at it must not stop the window from closing.
+                // The repaint is cosmetic and must not stop the window from closing.
             }
         }
 
@@ -171,9 +171,8 @@ namespace PillScript.Editor
         }
 
         /// <summary>
-        /// The canvas rectangle in the Grasshopper window's own coordinates. Docking into that
-        /// rather than into the whole window keeps the ribbon and the status bar clear, which is
-        /// the difference between sitting beside the canvas and sitting on top of Grasshopper.
+        /// The canvas rectangle in the Grasshopper window's own coordinates. Docking into the
+        /// canvas instead of the whole window leaves the ribbon and the status bar visible.
         /// </summary>
         Rectangle CanvasArea()
         {
@@ -186,7 +185,7 @@ namespace PillScript.Editor
             return new Rectangle(corner, canvas.Size);
         }
 
-        /// <summary>The width the splitter measures against, which is the canvas and not the window.</summary>
+        /// <summary>The width the splitter measures against: the canvas, not the whole window.</summary>
         public int HostWidth => IsDocked && _host != null ? CanvasArea().Width : 0;
 
         [DllImport("user32.dll", SetLastError = true)]

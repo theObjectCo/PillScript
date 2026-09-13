@@ -7,9 +7,9 @@ using System.Text.Json;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// Reads project.assets.json, the file restore leaves behind that says which assembly out of
+    /// Reads project.assets.json, the file a restore leaves behind naming which assembly from
     /// each package applies here. A package usually ships several builds of the same library, and
-    /// this is where the SDK has already made the choice.
+    /// the SDK has already chosen between them in this file.
     /// </summary>
     internal static class RestoreAssets
     {
@@ -76,7 +76,7 @@ namespace PillScript.Scripting
 
             foreach (var asset in assets.EnumerateObject())
             {
-                // A package says "this framework is supported, with nothing to add" like this.
+                // This is how a package declares that a framework is supported with nothing to add.
                 if (asset.Name.EndsWith("_._", StringComparison.Ordinal)) continue;
 
                 var relative = asset.Name.Replace('/', Path.DirectorySeparatorChar);

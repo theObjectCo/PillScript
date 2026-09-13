@@ -21,8 +21,8 @@ namespace PillScript.Editor
     }
 
     /// <summary>
-    /// Turns what the component knows into the shapes the page reads. Keeping the wire format in
-    /// one place means a field the page expects can be found without reading the whole editor.
+    /// Converts the component's state into the shapes the page reads. The wire format is all in
+    /// one file, so a field the page expects can be found without reading the whole editor.
     /// </summary>
     internal static class EditorPayloads
     {
@@ -129,7 +129,7 @@ namespace PillScript.Editor
                 endColumn = span.EndColumn
             });
 
-        /// <summary>The same, with what each place should be replaced by.</summary>
+        /// <summary>The same places, each with the text that replaces it.</summary>
         public static object Edits(IEnumerable<SourceEdit> edits)
             => edits.Select(edit => new
             {

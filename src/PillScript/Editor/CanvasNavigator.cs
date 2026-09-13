@@ -8,9 +8,9 @@ using PillScript.Components;
 namespace PillScript.Editor
 {
     /// <summary>
-    /// Moves the Grasshopper canvas to the component the editor belongs to. Kept apart from the
-    /// window because it is about the canvas, not about the editor, and because the viewport has
-    /// enough of its own habits to be worth reading in one place.
+    /// Moves the Grasshopper canvas to the component the editor belongs to. Separate from the
+    /// window class because it concerns the canvas, and because the viewport has enough quirks to
+    /// be worth keeping in one file.
     /// </summary>
     internal sealed class CanvasNavigator
     {
@@ -23,13 +23,13 @@ namespace PillScript.Editor
         public CanvasNavigator(PillScriptComponent component) { _component = component; }
 
         /// <summary>
-        /// Brings the canvas to the component at full zoom and selects it. The viewport has its
-        /// own way of being moved: setting its target leaves the projection untouched, so nothing
-        /// appears to happen. Focus is the method meant for it.
+        /// Brings the canvas to the component at full zoom and selects it. Setting the viewport's
+        /// target leaves the projection untouched and nothing appears to move, so Focus is the
+        /// method used here.
         /// </summary>
         /// <param name="covered">
         /// How many pixels of canvas the editor is covering, negative when it covers the left.
-        /// The component is placed in the middle of what is left rather than behind the editor.
+        /// The component is centred in the part of the canvas that stays visible.
         /// </param>
         public void Locate(float covered)
         {
@@ -57,8 +57,8 @@ namespace PillScript.Editor
         }
 
         /// <summary>
-        /// Walks the viewport from where it is to where it should be over half a second. A jump
-        /// leaves you wondering which way the canvas went; a short move shows you.
+        /// Moves the viewport to its new position over half a second. A jump gives no indication
+        /// of which direction the canvas travelled.
         /// </summary>
         void Glide(GH_Canvas canvas, PointF from, float fromZoom, PointF to, float toZoom, float offset)
         {
@@ -76,8 +76,8 @@ namespace PillScript.Editor
                 var x = (float)(from.X + (to.X - from.X) * eased);
                 var y = (float)(from.Y + (to.Y - from.Y) * eased);
 
-                // Focus wants its point already multiplied by the zoom, and divides it again to
-                // find the centre. That makes the nudge past a docked editor plain pixels.
+                // Focus expects its point already multiplied by the zoom and divides it again to
+                // find the centre, which leaves the offset past a docked editor in plain pixels.
                 canvas.Viewport.Zoom = zoom;
                 canvas.Viewport.Focus(new PointF(x * zoom + offset, y * zoom));
                 canvas.Refresh();

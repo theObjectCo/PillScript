@@ -7,24 +7,24 @@ using System.Threading.Tasks;
 namespace PillScript.Icons
 {
     /// <summary>
-    /// Icons by name from the Phosphor set, which is nine thousand drawings under the MIT licence
-    /// and far too many to carry in a plugin. One is fetched the first time a component asks for
-    /// it and kept on disk from then on, so a definition opened on a machine that has seen the
-    /// icon before draws it without asking anybody.
+    /// Icons by name from the Phosphor set: some nine thousand drawings under the MIT licence,
+    /// too many to ship inside a plugin. An icon is fetched the first time a component asks for it
+    /// and kept on disk after that, so a definition opened on a machine that has already seen the
+    /// icon draws it without a request.
     ///
-    /// The names are the ones on https://phosphoricons.com. A weight is a suffix, as it is in the
-    /// catalogue: gear-six is the regular one, gear-six-bold and gear-six-fill are its cousins.
+    /// The names are the ones listed on https://phosphoricons.com. A weight is a suffix, as in the
+    /// catalogue: gear-six is the regular weight, gear-six-bold and gear-six-fill are variants.
     /// </summary>
     internal static class PhosphorIcons
     {
-        /// <summary>Pinned, so the same name gives the same drawing a year from now.</summary>
+        /// <summary>Pinned, so the same name still resolves to the same drawing next year.</summary>
         const string Release = "2.1.1";
 
         static readonly string[] Weights = { "thin", "light", "bold", "fill", "duotone" };
 
         static readonly HttpClient Web = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
 
-        /// <summary>Name to SVG. An empty string is an icon the catalogue does not have.</summary>
+        /// <summary>Name to SVG. An empty string marks a name the catalogue does not have.</summary>
         static readonly ConcurrentDictionary<string, string> Held =
             new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -39,8 +39,8 @@ namespace PillScript.Icons
             "PillScript", "icons");
 
         /// <summary>
-        /// The drawing for a name, or null: either it is being fetched, or there is no such icon.
-        /// Asking again is what eventually answers, which is why the caller redraws on Arrived.
+        /// The drawing for a name, or null while it is being fetched or if there is no such icon.
+        /// A later call returns it, which is why callers redraw on Arrived.
         /// </summary>
         public static string Svg(string name)
         {
@@ -100,7 +100,7 @@ namespace PillScript.Icons
 
                     if (!answer.IsSuccessStatusCode)
                     {
-                        // No such icon. Remembered, so a typo is not asked about again and again.
+                        // No such icon. Recorded, so a typo is not fetched again on every call.
                         Held[name] = string.Empty;
                         return;
                     }
@@ -115,7 +115,7 @@ namespace PillScript.Icons
                 }
                 catch (Exception)
                 {
-                    // Offline, or the request went wrong. Not remembered: worth trying again.
+                    // Offline, or the request failed. Not recorded, so the next call retries.
                 }
                 finally
                 {

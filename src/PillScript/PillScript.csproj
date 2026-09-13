@@ -32,10 +32,10 @@
   </ItemGroup>
 
   <!--
-    The panel's icon has to be embedded rather than loaded from a path. Loading one from a file
-    works in a debug build and fails silently in a release one, which is a well worn trap in the
-    Rhino forums; LogicalName is fixed here so the resource is named the same whatever the folder
-    layout does.
+    The panel's icon has to be embedded, not loaded from a path. An icon loaded from a file works
+    in a debug build and fails silently in a release one, a case that comes up regularly on the
+    Rhino forums. LogicalName is set here so the resource keeps the same name whatever the folder
+    layout is.
   -->
   <ItemGroup>
     <EmbeddedResource Include="panel.ico" LogicalName="PillScript.panel.ico" />

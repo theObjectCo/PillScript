@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 namespace PillScript.Scripting
 {
     /// <summary>
-    /// Where the working folders live, and what becomes of the ones nobody comes back to.
+    /// Where the working folders are kept, and when they are deleted.
     ///
-    /// A working folder is a mirror: the files themselves are kept in the Grasshopper document, so
-    /// a folder is worth no more than the restore sitting in it. One nobody has compiled from in a
-    /// week is a cache for a definition that has moved on, and the next compile writes it back
-    /// anyway. They are swept once, as Grasshopper loads, on a thread of their own.
+    /// A working folder is a mirror. The files themselves are stored in the Grasshopper document,
+    /// so the only thing a folder holds that is not elsewhere is the restore. A folder nothing has
+    /// compiled from in a week belongs to a definition that has moved on, and the next compile
+    /// writes it out again. The sweep runs once, on its own thread, as Grasshopper loads.
     /// </summary>
     internal static class ProjectCache
     {
@@ -23,8 +23,8 @@ namespace PillScript.Scripting
         public static string FolderFor(Guid id) => Path.Combine(Root, id.ToString("N"));
 
         /// <summary>
-        /// Sweeps in the background and says so if anything went. Loading Grasshopper is not the
-        /// moment to walk a folder tree, and a sweep that fails is not a reason to fail to load.
+        /// Sweeps in the background and reports what it deleted. Walking a folder tree during the
+        /// Grasshopper load would delay it, and a failed sweep must not fail the load.
         /// </summary>
         public static void SweepLater()
         {
@@ -65,7 +65,7 @@ namespace PillScript.Scripting
                 }
                 catch (IOException)
                 {
-                    // Open in an IDE, or another Rhino is working in it. It can go next time.
+                    // Open in an IDE, or another Rhino is using it. The next sweep can take it.
                 }
                 catch (UnauthorizedAccessException)
                 {
@@ -77,8 +77,8 @@ namespace PillScript.Scripting
 
         /// <summary>
         /// When the folder was last written to. The sources sit at the top level and mirroring
-        /// rewrites them, so the newest file up there is what says whether anybody still uses it;
-        /// obj and bin underneath are the restore's business and are not asked.
+        /// rewrites them, so the newest file there shows whether the folder is still in use. The
+        /// obj and bin folders underneath belong to the restore and are not examined.
         /// </summary>
         static DateTime Touched(string folder)
         {

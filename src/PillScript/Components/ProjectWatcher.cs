@@ -9,9 +9,9 @@ namespace PillScript.Components
 {
     /// <summary>
     /// Keeps the component in step with the folder its project is mirrored into, so editing the
-    /// same project in an IDE has the same effect as editing it in the editor here. It also owns
-    /// the writing, because only something that knows when we last wrote can tell our own changes
-    /// from somebody else's.
+    /// project in an IDE has the same effect as editing it in the built in editor. The writing
+    /// happens here too: telling the plugin's own changes from an outside edit needs the time of
+    /// the last write, which only this class holds.
     /// </summary>
     internal sealed class ProjectWatcher : IDisposable
     {
@@ -31,14 +31,14 @@ namespace PillScript.Components
             _pulled = pulled;
         }
 
-        /// <summary>Writes the project out and notes when, which is what the guard below reads.</summary>
+        /// <summary>Writes the project out and records the time, which the guard below reads.</summary>
         public void Mirror()
         {
             _project.MirrorToDisk();
             _mirrored = DateTime.UtcNow;
         }
 
-        /// <summary>Starts following the folder. Does nothing until the folder is actually there.</summary>
+        /// <summary>Starts watching the folder. Does nothing until the folder exists.</summary>
         public void Start()
         {
             if (_watcher != null || !Directory.Exists(_project.WorkingFolder)) return;
@@ -58,7 +58,7 @@ namespace PillScript.Components
 
         void OnChanged(object sender, FileSystemEventArgs e)
         {
-            // An editor writing a file raises several events; only the last one is worth reading.
+            // An editor writing a file raises several events and only the last one is read.
             _pending?.Cancel();
             _pending = new CancellationTokenSource();
 
@@ -75,9 +75,9 @@ namespace PillScript.Components
 
         void Pull(DateTime seen)
         {
-            // Mirroring the project trips the watcher, and pulling the result back in would reload
-            // the files, rebuild the language service and redraw for no change at all. An edit made
-            // elsewhere arrives after the write and still gets through.
+            // Mirroring the project trips the watcher, and reading the result back in would reload
+            // the files, rebuild the language service and redraw with nothing changed. An edit made
+            // elsewhere arrives after the write and still passes this guard.
             if (seen <= _mirrored) return;
 
             if (!_project.PullFromDisk()) return;

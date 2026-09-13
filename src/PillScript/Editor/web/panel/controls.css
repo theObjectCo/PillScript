@@ -1,5 +1,5 @@
-/* The controls themselves, in the three states the design calls for: at rest, under the pointer,
-   and the accent gradient reserved for what is active or primary. The shell is panel.css. */
+/* The controls themselves, in the states the design specifies: at rest, under the pointer, and
+   the accent gradient reserved for what is active or primary. The shell is in panel.css. */
 
 /* ----- slider ------------------------------------------------------------------------------ */
 
@@ -89,8 +89,8 @@
 .spin div:hover { color: #ffffff; }
 .spin svg { width: 9px; height: 9px; }
 
-/* The axis letters carry Rhino's own red, green and blue, which is the one place a control is
-   coloured by what it holds. */
+/* The axis letters carry Rhino's own red, green and blue. This is the one place where a control
+   is coloured by the value it holds. */
 .trio { display: flex; gap: 5px; min-width: 0; }
 .trio .field { flex: 1; min-width: 0; padding: 0 7px; }
 .trio .x .prefix { color: #e5705c; }
@@ -125,8 +125,8 @@
 .segmented div:hover { background: #38383a; color: #ffffff; }
 .segmented div.on { background: var(--press); color: #ffffff; }
 
-/* The list a picker opens is drawn here rather than by a select element: the window a select
-   opens is outside the page, and one opened from a docked panel is at Rhino's mercy. */
+/* The list a picker opens is drawn here instead of by a select element. The window a select
+   opens sits outside the page, and one opened from a docked panel closes on a focus change. */
 
 .picker { cursor: pointer; padding: 0 5px 0 9px; }
 
@@ -241,8 +241,8 @@
 
 .press.quiet:hover { background: #37373a; color: #ffffff; }
 
-/* A RegisterUi that throws, or a script with no build, says so under its own section rather than
-   leaving an empty one. */
+/* A RegisterUi that throws, or a script with no build, prints the reason under its own section
+   instead of leaving it empty. */
 .problem {
   display: flex;
   align-items: flex-start;

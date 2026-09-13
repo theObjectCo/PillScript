@@ -16,13 +16,13 @@ namespace PillScript.Scripting
     }
 
     /// <summary>
-    /// Looks packages up on nuget.org, so a package can be found by name instead of being typed
-    /// from memory. Nothing here is needed to build: it only fills in the references window.
+    /// Looks packages up on nuget.org, so a package can be found by name. None of this is needed
+    /// to build; it only fills in the references window.
     /// </summary>
     internal static class NuGetCatalogue
     {
-        // Every await here drops the caller's context on purpose. Nothing in this class touches
-        // the UI, and a continuation that insists on the UI thread deadlocks anyone who waits on
+        // Every await here drops the caller's context deliberately. Nothing in this class touches
+        // the UI, and a continuation that required the UI thread would deadlock a caller waiting on
         // the task from that thread.
 
         const string Search = "https://azuresearch-usnc.nuget.org/query";
@@ -93,7 +93,7 @@ namespace PillScript.Scripting
             }
             catch (Exception)
             {
-                // Offline, or nuget.org is having a moment. The window says so and carries on.
+                // Offline, or nuget.org returned an error. The window reports it and carries on.
                 return null;
             }
         }

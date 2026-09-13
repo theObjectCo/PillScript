@@ -5,12 +5,12 @@ using System.IO;
 namespace PillScript.Components
 {
     /// <summary>
-    /// The component's icon: the same capsule the editor wears as its logo, kept here as the
-    /// rendered artwork rather than redrawn, so the two cannot drift apart. The drawing itself
-    /// is the icPill symbol in Editor/web/index.html; if it changes there, render it again at
-    /// 24 by 24 and replace the bytes below.
+    /// The component's icon: the capsule the editor uses as its logo, stored here as rendered
+    /// artwork instead of being drawn a second time, so the two cannot diverge. The drawing itself
+    /// is the icPill symbol in Editor/web/index.html. If it changes there, render it again at 24 by
+    /// 24 and replace the bytes below.
     ///
-    /// Carried in the source rather than as a resource file, which keeps the plugin a single .gha.
+    /// Held in the source instead of a resource file, which keeps the plugin a single .gha.
     /// </summary>
     internal static class ComponentIcon
     {
@@ -22,8 +22,8 @@ namespace PillScript.Components
         {
             var bytes = Convert.FromBase64String(Artwork);
 
-            // The stream has to outlive the bitmap, so the bitmap is copied off it and the
-            // original let go. A Bitmap built straight from a stream keeps reading from it.
+            // A Bitmap built directly from a stream keeps reading from that stream, so the
+            // bitmap is copied and the original released.
             using var stream = new MemoryStream(bytes);
             using var loaded = new Bitmap(stream);
 
