@@ -229,12 +229,15 @@ namespace PillScript.Components
                 CompileOnLoad = !CompileOnLoad;
             }, true, CompileOnLoad);
 
+            // Always offered, whether or not the script declares anything. Greying it out when
+            // there is nothing to show traps a component that was published and has since been
+            // edited: the tick stays on with no way to take it off.
             var declared = Register().Controls.Count > 0;
 
             Menu_AppendItem(menu, "Publish to panel", (_, __) => SetPublished(!IsPublished),
-                declared, IsPublished).ToolTipText = declared
+                true, IsPublished).ToolTipText = declared
                 ? "Show this script's controls in the Rhino panel."
-                : "Override RegisterUi in the script to give it controls, then compile.";
+                : "This script declares no controls yet: override RegisterUi and compile.";
 
             Menu_AppendItem(menu, "Open project folder", (_, __) =>
             {
