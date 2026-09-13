@@ -96,6 +96,40 @@ item. `[Description]`, `[Name]`, `[Default]` and `[Optional]` adjust the paramet
 The parameter list is rebuilt after each successful compile. Wires survive as long as the parameter
 keeps its name, its type and its access.
 
+## What survives between runs
+
+Every solve calls `RunScript`, and it calls it once per iteration rather than once per solve: send
+a list of three numbers into an input declared as a single value and the method runs three times,
+with `Iteration` counting 0, 1, 2.
+
+The instance is made fresh for each of those calls, so a field on the script class is useless for
+carrying anything: it starts at its initial value every time, not once per solve.
+
+A `static` field does survive. It lives in the compiled assembly, which outlives any one call, so
+it carries across iterations and across solves. Counting calls with one shows it plainly:
+
+```csharp
+public class Script : ScriptBase
+{
+    static int calls;   // 1, 2, 3, 4 ... across every run
+    int mine;           // 1 every time
+
+    public void RunScript(out string state)
+    {
+        calls++;
+        mine++;
+        state = calls + " calls, instance at " + mine;
+    }
+}
+```
+
+Two things about a static are worth knowing before leaning on one. It belongs to the component,
+not to the class: each component compiles its own assembly into its own load context, so two
+components running identical code keep separate counters. And it dies at the next compile, because
+compiling throws the old build away and unloads it, which is also what happens when a breakpoint is
+added or removed. So a static is a cache that survives solving and does not survive editing, which
+is usually what a cache should do.
+
 ## An example to open
 
 `examples/diffusion-limited-aggregation.gh` grows a dendrite by sending particles in one at a
