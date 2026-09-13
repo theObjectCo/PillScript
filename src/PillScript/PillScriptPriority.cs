@@ -1,3 +1,4 @@
+using System;
 using Grasshopper.Kernel;
 using PillScript.Bridge;
 
@@ -11,10 +12,33 @@ namespace PillScript
     /// </summary>
     public class PillScriptPriority : GH_AssemblyPriority
     {
+        // Grasshopper is itself a Rhino plugin, and a panel has to be registered against one.
+        // Borrowing the host's own means this .gha needs no .rhp beside it.
+        static readonly Guid GrasshopperPlugin = new Guid("b45a29b1-4343-4035-989e-044e8580d9cf");
+
         public override GH_LoadingInstruction PriorityLoad()
         {
             ScriptBridgeServer.Start();
+            RegisterPanel();
+
             return GH_LoadingInstruction.Proceed;
+        }
+
+        /// <summary>Spike. Failing to register a panel is not a reason to fail to load.</summary>
+        static void RegisterPanel()
+        {
+            try
+            {
+                var host = Rhino.PlugIns.PlugIn.Find(GrasshopperPlugin);
+                if (host == null) return;
+
+                Rhino.UI.Panels.RegisterPanel(host, typeof(Panel.UiPanelHost), "PillScript", null);
+            }
+            catch (Exception exception)
+            {
+                Rhino.RhinoApp.WriteLine("PillScript: the panel could not be registered ("
+                    + exception.Message + ").");
+            }
         }
     }
 }

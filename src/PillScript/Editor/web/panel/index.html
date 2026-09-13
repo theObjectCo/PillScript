@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>PillScript</title>
+  <link rel="stylesheet" href="panel.css" />
+  <style id="author"></style>
+</head>
+<body>
+<div id="sections"></div>
+
+<script>
+  // Spike. It renders the widget schema a component publishes and reports every change back.
+  // What it proves: the panel docks, the page runs inside it, and values cross both ways.
+  (function () {
+    'use strict';
+
+    var host = window.chrome && window.chrome.webview;
+    var sections = document.getElementById('sections');
+
+    function el(tag, className, text) {
+      var node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function send(component, name, value) {
+      if (host) host.postMessage({ type: 'set', component: component, name: name, value: value });
+    }
+
+    var builders = {
+      slider: function (w, component) {
+        var row = el('div', 'widget');
+        row.appendChild(el('label', null, w.label || w.name));
+
+        var input = document.createElement('input');
+        input.type = 'range';
+        input.min = w.minimum;
+        input.max = w.maximum;
+        input.step = w.step || 0.01;
+        input.value = w.value;
+
+        var shown = el('span', 'value', Number(w.value).toFixed(2));
+
+        input.oninput = function () {
+          shown.textContent = Number(input.value).toFixed(2);
+          send(component, w.name, Number(input.value));
+        };
+
+        row.appendChild(input);
+        row.appendChild(shown);
+        return row;
+      },
+
+      number: function (w, component) {
+        var row = el('div', 'widget');
+        row.appendChild(el('label', null, w.label || w.name));
+
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.value = w.value;
+        input.onchange = function () { send(component, w.name, Number(input.value)); };
+
+        row.appendChild(input);
+        return row;
+      },
+
+      toggle: function (w, component) {
+        var row = el('div', 'widget');
+        row.appendChild(el('label', null, w.label || w.name));
+
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = !!w.value;
+        input.onchange = function () { send(component, w.name, input.checked); };
+
+        row.appendChild(input);
+        return row;
+      },
+
+      choice: function (w, component) {
+        var row = el('div', 'widget');
+        row.appendChild(el('label', null, w.label || w.name));
+
+        var select = document.createElement('select');
+        (w.options || []).forEach(function (option) {
+          var item = document.createElement('option');
+          item.value = option;
+          item.textContent = option;
+          item.selected = option === w.value;
+          select.appendChild(item);
+        });
+
+        select.onchange = function () { send(component, w.name, select.value); };
+
+        row.appendChild(select);
+        return row;
+      },
+
+      button: function (w, component) {
+        var row = el('div', 'widget');
+        var button = el('button', 'action', w.label || w.name);
+        button.onclick = function () { send(component, w.name, true); };
+
+        row.appendChild(button);
+        return row;
+      }
+    };
+
+    function render(published) {
+      sections.innerHTML = '';
+
+      if (!published || !published.length) {
+        sections.appendChild(el('div', 'none', 'Nothing published. A script component offers ' +
+          'Publish to panel in its menu.'));
+        return;
+      }
+
+      published.forEach(function (section) {
+        var block = el('div', 'section');
+        block.appendChild(el('h2', null, section.title));
+
+        (section.widgets || []).forEach(function (w) {
+          var build = builders[w.kind];
+          if (build) block.appendChild(build(w, section.component));
+        });
+
+        sections.appendChild(block);
+      });
+    }
+
+    if (!host) {
+      render([{
+        component: 'sample', title: 'Sample, outside Rhino', widgets: [
+          { kind: 'slider', name: 'radius', minimum: 1, maximum: 50, value: 10 },
+          { kind: 'choice', name: 'style', options: ['round', 'square'], value: 'round' },
+          { kind: 'toggle', name: 'cap', value: true },
+          { kind: 'button', name: 'bake', label: 'Bake' }
+        ]
+      }]);
+      return;
+    }
+
+    var author = document.getElementById('author');
+
+    host.addEventListener('message', function (event) {
+      if (!event.data || event.data.type !== 'published') return;
+
+      // Last sheet in the document, so the author's rules win without needing !important.
+      author.textContent = event.data.css || '';
+      render(event.data.sections);
+    });
+
+    host.postMessage({ type: 'ready' });
+  })();
+</script>
+</body>
+</html>
