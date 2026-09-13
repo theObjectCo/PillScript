@@ -1,0 +1,165 @@
+/* The controls themselves, in the three states the design calls for: at rest, under the pointer,
+   and the accent reserved for what is active or primary. The shell they sit in is panel.css. */
+
+/* ----- slider ------------------------------------------------------------------------------ */
+
+.slider { height: 20px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.slider .track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: var(--track); }
+.slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--accent); }
+
+.slider .grip {
+  position: absolute;
+  top: -5px;
+  width: 10px;
+  height: 14px;
+  margin-left: -5px;
+  border-radius: 2px;
+  background: var(--handle);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.slider:hover .track { background: #565656; }
+.slider:hover .fill { background: #2b8fe0; }
+.slider:hover .grip { top: -6px; width: 12px; height: 16px; margin-left: -6px; background: #ffffff; }
+
+/* ----- fields ------------------------------------------------------------------------------ */
+
+.field {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  box-sizing: border-box;
+  background: var(--field);
+  border: 1px solid var(--fieldEdge);
+  border-radius: 2px;
+  padding: 0 2px 0 8px;
+  min-width: 0;
+}
+
+.field:hover { border-color: var(--fieldEdgeLit); }
+.field:focus-within { border-color: var(--accent); }
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  padding: 0;
+  color: var(--inkBright);
+  font: inherit;
+}
+
+.field input.number { font-family: var(--mono); font-size: 11px; }
+.field .prefix { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-right: 5px; }
+
+.spin { display: flex; flex-direction: column; width: 16px; flex: none; }
+.spin div { height: 10px; display: grid; place-items: center; color: var(--label); cursor: pointer; }
+.spin div:hover { color: #ffffff; }
+.spin svg { width: 9px; height: 9px; }
+
+.trio { display: flex; gap: 4px; min-width: 0; }
+.trio .field { flex: 1; min-width: 0; padding-right: 6px; }
+
+select {
+  height: 24px;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--field);
+  color: var(--inkBright);
+  border: 1px solid var(--fieldEdge);
+  border-radius: 2px;
+  padding: 0 4px 0 8px;
+  font: inherit;
+  font-size: 11px;
+  outline: none;
+}
+
+select:hover { border-color: var(--fieldEdgeLit); }
+select:focus { border-color: var(--accent); }
+
+/* ----- picking ----------------------------------------------------------------------------- */
+
+.segmented {
+  display: flex;
+  height: 24px;
+  border: 1px solid var(--fieldEdge);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--field);
+}
+
+.segmented div {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--label);
+  cursor: pointer;
+  border-right: 1px solid var(--fieldEdge);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.segmented div:last-child { border-right: 0; }
+.segmented div:hover { background: var(--fieldEdge); color: #ffffff; }
+.segmented div.on { background: var(--accent); color: #ffffff; }
+
+.check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+.check .box {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  background: var(--field);
+  border: 1px solid #6b6b6b;
+}
+
+.check.on .box { background: var(--accent); border-color: var(--accent); }
+.check .box svg { width: 10px; height: 10px; opacity: 0; }
+.check.on .box svg { opacity: 1; }
+.check .note { font-size: 12px; color: var(--label); }
+
+.swatch { cursor: pointer; }
+.swatch .chip { width: 12px; height: 12px; flex: none; border-radius: 2px; border: 1px solid #00000066; margin-right: 8px; }
+.swatch .hex { font-family: var(--mono); font-size: 11px; color: var(--inkBright); }
+
+/* ----- pressing, and what went wrong -------------------------------------------------------- */
+
+.buttons { display: flex; gap: 6px; }
+
+.press {
+  height: 26px;
+  padding: 0 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.press:hover { background: var(--accentLit); }
+.press.quiet { background: var(--field); border: 1px solid var(--fieldEdge); color: var(--ink); }
+.press.quiet:hover { background: var(--fieldEdge); }
+
+/* A RegisterUi that throws, or a script with no build, says so under its own section rather than
+   leaving an empty one. */
+.problem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 7px 9px;
+  background: #2a1f1e;
+  border-left: 2px solid #c02414;
+  border-radius: 0 2px 2px 0;
+  font-size: 11px;
+  color: #d8b9b3;
+  line-height: 1.45;
+}
+
+.problem svg { width: 13px; height: 13px; flex: none; margin-top: 1px; color: #e5705c; }

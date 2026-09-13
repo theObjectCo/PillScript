@@ -4,164 +4,76 @@
   <meta charset="utf-8" />
   <title>PillScript</title>
   <link rel="stylesheet" href="panel.css" />
+  <link rel="stylesheet" href="controls.css" />
+  <!-- Last sheet in the document, so a script's own ui.css wins by cascade order. -->
   <style id="author"></style>
 </head>
 <body>
-<div id="sections"></div>
 
-<script>
-  // Draws what the published components declare, and reports every change back. The host owns
-  // when a change becomes a solve; this only says what was touched.
-  (function () {
-    'use strict';
+<svg width="0" height="0" class="sprite" aria-hidden="true">
+  <defs>
+    <linearGradient id="pBlue" gradientUnits="userSpaceOnUse" x1="0" y1="8.5" x2="0" y2="15.5">
+      <stop offset="0" stop-color="#78a8ff"></stop><stop offset="0.16" stop-color="#3f74e8"></stop>
+      <stop offset="0.5" stop-color="#1a44b4"></stop><stop offset="0.82" stop-color="#0c1f5e"></stop>
+      <stop offset="1" stop-color="#2e63c8"></stop>
+    </linearGradient>
+    <linearGradient id="pRed" gradientUnits="userSpaceOnUse" x1="0" y1="8.5" x2="0" y2="15.5">
+      <stop offset="0" stop-color="#ff9b86"></stop><stop offset="0.16" stop-color="#ee5237"></stop>
+      <stop offset="0.5" stop-color="#c02414"></stop><stop offset="0.82" stop-color="#65100a"></stop>
+      <stop offset="1" stop-color="#d84430"></stop>
+    </linearGradient>
+    <linearGradient id="pGloss" gradientUnits="userSpaceOnUse" x1="0" y1="9" x2="0" y2="12.2">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"></stop>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"></stop>
+    </linearGradient>
+    <clipPath id="pCap"><rect x="1.5" y="8.5" width="21" height="7" rx="3.5"></rect></clipPath>
+    <filter id="pShadow" x="-30%" y="-30%" width="170%" height="170%">
+      <feDropShadow dx="0.4" dy="0.7" stdDeviation="0.6" flood-color="#000000" flood-opacity="0.55"></feDropShadow>
+    </filter>
 
-    var host = window.chrome && window.chrome.webview;
-    var sections = document.getElementById('sections');
+    <g id="icPill" filter="url(#pShadow)">
+      <g transform="rotate(-45 12 12)">
+        <g clip-path="url(#pCap)">
+          <rect x="1.5" y="8.5" width="10.5" height="7" fill="url(#pBlue)"></rect>
+          <rect x="12" y="8.5" width="10.5" height="7" fill="url(#pRed)"></rect>
+          <rect x="3.4" y="9.15" width="17.2" height="2.3" rx="1.15" fill="url(#pGloss)"></rect>
+          <rect x="11.3" y="8.5" width="1.4" height="7" fill="#08080c" opacity="0.55"></rect>
+        </g>
+        <rect x="1.5" y="8.5" width="21" height="7" rx="3.5" fill="none" stroke="#06060a"
+              stroke-width="0.9" opacity="0.8"></rect>
+        <rect x="1.5" y="8.5" width="21" height="7" rx="3.5" fill="none" stroke="#ffffff"
+              stroke-width="0.55" opacity="0.42"></rect>
+      </g>
+    </g>
+  </defs>
+</svg>
 
-    function el(tag, className, text) {
-      var node = document.createElement(tag);
-      if (className) node.className = className;
-      if (text !== undefined) node.textContent = text;
-      return node;
-    }
+<header id="chrome">
+  <svg class="glyph pill" viewBox="0 0 24 24"><use href="#icPill"></use></svg>
+  <span class="name">PillScript</span>
+  <span id="count" class="mono muted"></span>
+  <div class="spacer"></div>
+  <div id="fold" class="tool" title="Roll every script up or down">
+    <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg>
+  </div>
+  <div id="dismiss" class="tool" title="Close the panel">
+    <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+         stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+  </div>
+</header>
 
-    function send(component, name, value) {
-      if (host) host.postMessage({ type: 'set', component: component, name: name, value: value });
-    }
+<main id="sections"></main>
 
-    var builders = {
-      slider: function (w, component) {
-        var row = el('div', 'widget');
-        row.appendChild(el('label', null, w.label || w.name));
+<footer id="status">
+  <div id="lamp"></div>
+  <span id="solved" class="mono"></span>
+  <div class="spacer"></div>
+  <span id="document" class="mono muted"></span>
+</footer>
 
-        var input = document.createElement('input');
-        input.type = 'range';
-        input.min = w.minimum;
-        input.max = w.maximum;
-        input.step = w.step || 0.01;
-        input.value = w.value;
-
-        var shown = el('span', 'value', Number(w.value).toFixed(2));
-
-        input.oninput = function () {
-          shown.textContent = Number(input.value).toFixed(2);
-          send(component, w.name, Number(input.value));
-        };
-
-        row.appendChild(input);
-        row.appendChild(shown);
-        return row;
-      },
-
-      number: function (w, component) {
-        var row = el('div', 'widget');
-        row.appendChild(el('label', null, w.label || w.name));
-
-        var input = document.createElement('input');
-        input.type = 'number';
-        input.value = w.value;
-        input.onchange = function () { send(component, w.name, Number(input.value)); };
-
-        row.appendChild(input);
-        return row;
-      },
-
-      toggle: function (w, component) {
-        var row = el('div', 'widget');
-        row.appendChild(el('label', null, w.label || w.name));
-
-        var input = document.createElement('input');
-        input.type = 'checkbox';
-        input.checked = !!w.value;
-        input.onchange = function () { send(component, w.name, input.checked); };
-
-        row.appendChild(input);
-        return row;
-      },
-
-      choice: function (w, component) {
-        var row = el('div', 'widget');
-        row.appendChild(el('label', null, w.label || w.name));
-
-        var select = document.createElement('select');
-        (w.options || []).forEach(function (option) {
-          var item = document.createElement('option');
-          item.value = option;
-          item.textContent = option;
-          item.selected = option === w.value;
-          select.appendChild(item);
-        });
-
-        select.onchange = function () { send(component, w.name, select.value); };
-
-        row.appendChild(select);
-        return row;
-      },
-
-      text: function (w) {
-        return el('div', 'caption', w.label || '');
-      },
-
-      button: function (w, component) {
-        var row = el('div', 'widget');
-        var button = el('button', 'action', w.label || w.name);
-        button.onclick = function () { send(component, w.name, true); };
-
-        row.appendChild(button);
-        return row;
-      }
-    };
-
-    function render(published, problems) {
-      sections.innerHTML = '';
-
-      (problems || []).forEach(function (problem) {
-        sections.appendChild(el('div', 'problem', problem));
-      });
-
-      if (!published || !published.length) {
-        sections.appendChild(el('div', 'none', 'Nothing published. A script component offers ' +
-          'Publish to panel in its menu.'));
-        return;
-      }
-
-      published.forEach(function (section) {
-        var block = el('div', 'section');
-        block.appendChild(el('h2', null, section.title));
-
-        (section.widgets || []).forEach(function (w) {
-          var build = builders[w.kind];
-          if (build) block.appendChild(build(w, section.component));
-        });
-
-        sections.appendChild(block);
-      });
-    }
-
-    if (!host) {
-      render([{
-        component: 'sample', title: 'Sample, outside Rhino', widgets: [
-          { kind: 'slider', name: 'radius', minimum: 1, maximum: 50, value: 10 },
-          { kind: 'choice', name: 'style', options: ['round', 'square'], value: 'round' },
-          { kind: 'toggle', name: 'cap', value: true },
-          { kind: 'button', name: 'bake', label: 'Bake' }
-        ]
-      }]);
-      return;
-    }
-
-    var author = document.getElementById('author');
-
-    host.addEventListener('message', function (event) {
-      if (!event.data || event.data.type !== 'published') return;
-
-      // Last sheet in the document, so the author's rules win without needing !important.
-      author.textContent = event.data.css || '';
-      render(event.data.sections, event.data.problems);
-    });
-
-    host.postMessage({ type: 'ready' });
-  })();
-</script>
+<script src="controls.js"></script>
+<script src="choices.js"></script>
+<script src="panel.js"></script>
 </body>
 </html>

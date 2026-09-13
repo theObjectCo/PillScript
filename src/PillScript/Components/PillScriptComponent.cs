@@ -75,6 +75,32 @@ namespace PillScript.Components
 
         // ----- solving -----------------------------------------------------------------------
 
+        readonly System.Diagnostics.Stopwatch _clock = new System.Diagnostics.Stopwatch();
+        bool _solveFailed;
+
+        /// <summary>
+        /// Times the whole solve rather than one iteration, which is what the panel's status bar
+        /// is about: a script run over a list of two thousand takes what it takes, and the number
+        /// worth showing is that, not a two-thousandth of it.
+        /// </summary>
+        protected override void BeforeSolveInstance()
+        {
+            base.BeforeSolveInstance();
+
+            _clock.Restart();
+            _solveFailed = false;
+        }
+
+        protected override void AfterSolveInstance()
+        {
+            base.AfterSolveInstance();
+
+            _clock.Stop();
+            RecordSolve(_clock.Elapsed.TotalMilliseconds, _solveFailed);
+
+            if (IsPublished) AnnouncePublished();
+        }
+
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             // Compile errors are raised outside any solution, so they are re-stated here; a
@@ -104,6 +130,7 @@ namespace PillScript.Components
                 var said = ScriptFault.Describe(ScriptFault.Unwrap(exception));
 
                 lines.Add(said);
+                _solveFailed = true;
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, said);
             }
 

@@ -1,35 +1,158 @@
-/* What the panel looks like before anybody says otherwise. A published component may carry a
-   ui.css of its own; the host sends it across and the page appends it after this one, so the
-   author's rules win by cascade order rather than by fighting for specificity. */
+/* The shell: the bars top and bottom, the group each script gets, and the row a control sits in.
+   The controls themselves are in controls.css.
 
-html, body { margin: 0; height: 100%; background: #1f1f1f; color: #cccccc;
-             font: 12px 'Segoe UI', sans-serif; }
+   A published component may carry a ui.css of its own; the host sends it across and the page
+   appends it after these, so the author's rules win by cascade order rather than by fighting for
+   specificity.
 
-#sections { display: flex; flex-direction: column; }
+   The rules the layout keeps to: the label column is 84px and one colour, never coloured by
+   type; controls are 24px tall with 8px between them; #0078d4 marks what is active or primary
+   and nothing else; red belongs to the pill and to errors; numbers are monospace, right aligned,
+   in a fixed 48px. */
 
-.section { border-bottom: 1px solid #2b2b2b; padding: 10px 12px 14px; }
-.section > h2 { margin: 0 0 10px; font-size: 11px; font-weight: 600;
-                letter-spacing: .06em; text-transform: uppercase; color: #8a8a8a; }
+:root {
+  color-scheme: dark;
 
-.widget { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.caption { margin: 12px 0 6px; color: #cccccc; }
+  --panel: #252526;
+  --bar: #2d2d2d;
+  --group: #2a2a2b;
+  --groupLit: #313132;
+  --edge: #191919;
+  --rule: #1f1f1f;
+  --field: #313131;
+  --fieldEdge: #3c3c3c;
+  --fieldEdgeLit: #545454;
+  --ink: #cccccc;
+  --inkBright: #e4e4e4;
+  --label: #9d9d9d;
+  --muted: #6e6e6e;
+  --accent: #0078d4;
+  --accentLit: #026ec1;
+  --track: #4a4a4a;
+  --handle: #d6d6d6;
+  --mono: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--panel);
+  color: var(--ink);
+  font: 12px 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+body { display: flex; flex-direction: column; }
+
+.sprite { position: absolute; overflow: hidden; }
+.spacer { flex: 1; }
+.glyph { width: 14px; height: 14px; flex: none; }
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); }
+
+/* ----- the bars top and bottom ------------------------------------------------------------- */
+
+#chrome {
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 10px;
+  background: var(--bar);
+  border-bottom: 1px solid var(--edge);
+}
+
+#chrome .name { color: var(--ink); }
+#count { font-size: 10px; }
+
+.tool {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  color: var(--label);
+  cursor: pointer;
+}
+
+.tool:hover { background: var(--fieldEdge); color: #ffffff; }
+
+#status {
+  height: 26px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: var(--bar);
+  border-top: 1px solid var(--edge);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #8a8a8a;
+}
+
+#lamp { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #3fa34d; }
+#lamp.failed { background: #c02414; }
+#document { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ----- groups ------------------------------------------------------------------------------ */
+
+#sections { flex: 1; min-height: 0; overflow: auto; }
+
+.section { border-bottom: 1px solid var(--rule); }
+
+.head {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: var(--group);
+  cursor: pointer;
+  user-select: none;
+}
+
+.head:hover { background: var(--groupLit); }
+.head .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.head .chevron {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  color: var(--label);
+  transform: rotate(90deg);
+  transition: transform 80ms linear;
+}
+
+.section.shut .chevron { transform: rotate(0deg); }
+.section.shut .body { display: none; }
+
+.head .mark { font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
+
+.body { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.empty { padding: 16px 12px; color: var(--muted); }
+
+/* ----- rows -------------------------------------------------------------------------------- */
+
+.widget {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.widget.measured { grid-template-columns: 84px minmax(0, 1fr) 48px; }
+
+.widget > label {
+  font-size: 12px;
+  color: var(--label);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reading { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; }
+.caption { color: var(--ink); margin-top: 4px; }
 .caption:first-child { margin-top: 0; }
-
-.widget > label { width: 88px; flex: none; color: #cccccc; }
-.widget > input[type=range] { flex: 1; min-width: 0; accent-color: #0078d4; }
-.widget > .value { width: 48px; flex: none; text-align: right;
-                   font-family: 'Cascadia Mono', Consolas, monospace; color: #9d9d9d; }
-
-select, input[type=number] { flex: 1; min-width: 0; background: #313131; color: #cccccc;
-                             border: 1px solid #3c3c3c; border-radius: 2px; padding: 3px 6px;
-                             font: inherit; }
-
-button.action { background: #0078d4; color: #fff; border: 0; border-radius: 2px;
-                padding: 5px 12px; font: inherit; cursor: pointer; }
-button.action:hover { background: #026ec1; }
-
-.none { padding: 16px 12px; color: #6e6e6e; }
-
-/* A RegisterUi that throws says so here, rather than leaving an empty panel and a mystery. */
-.problem { margin: 10px 12px; padding: 8px 10px; border-left: 2px solid #f14c4c;
-           background: #2b1d1d; color: #f4a3a3; }

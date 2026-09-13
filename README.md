@@ -149,7 +149,7 @@ public class Script : ScriptBase
 
     public override void RegisterUi(UiRegistrar register)
     {
-        register.Text("Outline");
+        register.Caption("Outline");
         register.Slider("radius", 1, 50, 12, out radius);
         register.Whole("sides", 6, out sides, label: "corners");
         register.Button("bake", out bake, label: "Bake to Rhino");
@@ -163,16 +163,24 @@ control currently holds into the variable handed to it. `RegisterUi` runs before
 looks a control up by name.
 
 A component joins the panel through Publish to panel in its menu, and the panel opens the first
-time one does. Several published components stack in it in document order, each under its own
-heading. What the controls are set to is written into the .gh, so a definition opens with the
-panel as it was left; what they start at comes from the code, so changing a default in
-`RegisterUi` changes it for every definition that has not been touched.
+time one does. Several published components stack in it in document order, each under a heading
+carrying the component's nickname and four characters of its id, and each rolls up by clicking
+that heading. What the controls are set to is written into the .gh, along with which sections are
+rolled up, so a definition opens with the panel as it was left; what they start at comes from the
+code, so changing a default in `RegisterUi` changes it for every definition that has not been
+touched. The bar at the foot says how long the last solve took, and turns its lamp red when the
+script threw.
 
 A button is true for the one solve its press caused and false on every other, which is what lets
 a script act on a press without having to remember whether it already did. Dragging a slider is
-one solve after the dragging stops rather than forty along the way. The kinds are `Slider`,
-`Number`, `Whole`, `Toggle`, `Choice`, `Button`, and `Text` for a heading or a word of
-explanation.
+one solve after the dragging stops rather than forty along the way.
+
+The kinds are `Slider` for a number between bounds, `Number` and `Whole` for one typed in,
+`Toggle` for a switch, `Choice` for one of a list, `Text` for a line to type, `Vector` for three
+numbers on a row, `Colour` for a swatch that opens the picker Rhino uses everywhere else, `Layer`
+for a layer of the Rhino document by full path, `Button` for something to press, and `Caption` for
+a word of explanation. A `Choice` of up to three short options is drawn as a segmented control and
+anything longer as a dropdown.
 
 The panel holds a web view and nothing else, so every control is an HTML element and a script that
 carries a `ui.css` restyles them: the file is appended after the default sheet, so its rules win

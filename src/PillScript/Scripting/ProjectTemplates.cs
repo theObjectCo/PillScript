@@ -173,7 +173,7 @@ bool bake;
 
 public override void RegisterUi(UiRegistrar register)
 {
-    register.Text(""Outline"");
+    register.Caption(""Outline"");
     register.Slider(""radius"", 1, 50, 12, out radius);
     register.Whole(""sides"", 6, out sides, label: ""corners"");
     register.Choice(""style"", new[] { ""polygon"", ""circle"" }, out style);
@@ -185,11 +185,26 @@ public override void RegisterUi(UiRegistrar register)
 panel holds. Nothing is looked up by name at the point of use.
 
 Then turn on **Publish to panel** in the component's menu. The panel stacks a section for every
-published component, so several scripts can share it.
+published component, so several scripts can share it, and each section rolls up by its heading.
 
-The controls are: `Slider` for a number with bounds, `Number` and `Whole` for one typed in,
-`Toggle` for a switch, `Choice` for one of a list, `Button` for something to press, and `Text` for
-a heading. `Choice` takes any list, so the options can be worked out rather than written down.
+The controls:
+
+| Call | Gives |
+| --- | --- |
+| `Slider(name, min, max, value, out double)` | a number dragged between bounds |
+| `Number(name, value, out double)` | a number typed in |
+| `Whole(name, value, out int)` | the same, rounded, for a count |
+| `Toggle(name, value, out bool, note:)` | a switch, with a word beside it |
+| `Choice(name, options, out string)` | one of a list, segmented or a dropdown by length |
+| `Text(name, value, out string)` | a line to type in |
+| `Vector(name, value, out Vector3d)` | three numbers on one row |
+| `Colour(name, value, out Color)` | a swatch opening Rhino's colour picker |
+| `Layer(name, out string)` | a layer of the Rhino document, by full path |
+| `Button(name, out bool, quiet:)` | something to press |
+| `Caption(text)` | a line of explanation |
+
+`Choice` takes any list, so the options can be worked out rather than written down. A quiet button
+is drawn plainly, for the one standing beside the main action.
 
 A `Button` is true for the one solve its press caused and false on every other, so acting on it
 needs no memory of whether you already did.
@@ -198,7 +213,11 @@ Values are kept in the Grasshopper document, so they survive saving and reopenin
 not clear them; a control that disappears from `RegisterUi` takes its value with it.
 
 The panel is a web page, and a `ui.css` in this folder is appended after its own stylesheet, so
-any rule in there wins. The sections carry class names like `.section`, `.widget` and `.caption`.
+any rule in there wins. A section is `.section`, holding a `.head` and a `.body`; a row is
+`.widget` with its `label` and, for numbers, a `.reading`; the rest are `.caption`, `.field`,
+`.slider`, `.segmented`, `.check`, `.press` and `.problem`.
+That styling is not scoped to this script: a `ui.css` restyles the whole panel, including the
+sections other components published.
 
 ## What ScriptBase gives you
 

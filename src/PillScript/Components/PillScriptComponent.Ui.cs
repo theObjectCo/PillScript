@@ -28,6 +28,31 @@ namespace PillScript.Components
         /// <summary>Whether this component's controls appear in the Rhino panel.</summary>
         internal bool IsPublished { get; private set; }
 
+        /// <summary>
+        /// Whether its section in the panel is rolled up. Kept with the document, because a panel
+        /// of four scripts is arranged once and then wants to stay that way.
+        /// </summary>
+        internal bool IsCollapsed { get; private set; }
+
+        internal void SetCollapsed(bool collapsed)
+        {
+            if (IsCollapsed == collapsed) return;
+
+            IsCollapsed = collapsed;
+            AnnouncePublished();
+        }
+
+        /// <summary>How long the last solve took, in milliseconds, and whether it went through.</summary>
+        internal double LastSolveMs { get; private set; }
+
+        internal bool LastSolveFailed { get; private set; }
+
+        internal void RecordSolve(double milliseconds, bool failed)
+        {
+            LastSolveMs = milliseconds;
+            LastSolveFailed = failed;
+        }
+
         /// <summary>Raised when any component's publication or values changed, for the panel.</summary>
         internal static event Action Published;
 
@@ -43,7 +68,16 @@ namespace PillScript.Components
             var registrar = new UiRegistrar(UiHeld);
             UiProblem = null;
 
-            if (!(_compiled?.Instance is ScriptBase script)) return registrar;
+            if (!(_compiled?.Instance is ScriptBase script))
+            {
+                // An empty section with nothing said about it looks like a script that registered
+                // nothing, when what happened is that there is no build to ask.
+                UiProblem = _compiled == null
+                    ? "This script has not been built, so its controls are not known."
+                    : null;
+
+                return registrar;
+            }
 
             try
             {
@@ -111,6 +145,7 @@ namespace PillScript.Components
         /// </summary>
         void WriteUi(GH_IO.Serialization.GH_IWriter writer)
         {
+            writer.SetBoolean("UiCollapsed", IsCollapsed);
             writer.SetInt32("UiCount", _ui.Count);
 
             var index = 0;
@@ -145,6 +180,8 @@ namespace PillScript.Components
         void ReadUi(GH_IO.Serialization.GH_IReader reader)
         {
             _ui.Clear();
+
+            if (reader.ItemExists("UiCollapsed")) IsCollapsed = reader.GetBoolean("UiCollapsed");
 
             var count = reader.ItemExists("UiCount") ? reader.GetInt32("UiCount") : 0;
 

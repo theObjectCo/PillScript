@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Grasshopper;
-using Grasshopper.Kernel;
+using Rhino.Geometry;
 using PillScript.Components;
-using PillScript.Scripting;
 
 namespace PillScript.Panel
 {
@@ -42,27 +42,31 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// What the page is sent: the sections to draw, and the stylesheets the published scripts
-        /// carry, joined in document order so the last one wins the same way a later rule does.
+        /// What the page is sent: the sections to draw, the state of the last solve for the status
+        /// bar, and the stylesheets the published scripts carry, joined in document order so the
+        /// last one wins the same way a later rule does.
         /// </summary>
         public static object Payload()
         {
+            var published = Published();
             var sections = new List<object>();
             var styles = new List<string>();
-            var problems = new List<string>();
+            var wantsLayers = false;
 
-            foreach (var component in Published())
+            foreach (var component in published)
             {
                 var (registrar, problem, style) = component.Publication();
 
-                if (problem != null) problems.Add(Title(component) + ": " + problem);
                 if (!string.IsNullOrWhiteSpace(style)) styles.Add(style);
-                if (registrar.Controls.Count == 0) continue;
+                if (registrar.Controls.Any(c => c.Kind == "layer")) wantsLayers = true;
 
                 sections.Add(new
                 {
                     component = component.InstanceGuid.ToString(),
                     title = Title(component),
+                    mark = Mark(component),
+                    collapsed = component.IsCollapsed,
+                    problem,
                     widgets = registrar.Controls.Select(control => Describe(control, component.UiHeld))
                 });
             }
@@ -70,25 +74,52 @@ namespace PillScript.Panel
             return new
             {
                 type = "published",
+                document = Instances.ActiveCanvas?.Document?.DisplayName ?? string.Empty,
+                count = published.Count,
+                status = Status(published),
+                layers = wantsLayers ? Layers() : null,
                 css = string.Join("\n\n", styles),
-                problems,
                 sections
             };
         }
 
         /// <summary>
-        /// The section heading. A component keeps its nickname unless somebody renames it, and a
-        /// panel of three sections all called "C#" would be no use, so the name comes first and
-        /// falls back to something that at least differs.
+        /// The status bar: how long the last solve took and whether it went through. With several
+        /// published scripts it is the slowest of them, since that is the one worth looking at.
+        /// </summary>
+        static object Status(IEnumerable<PillScriptComponent> published)
+        {
+            var solved = published.Where(c => c.LastSolveMs > 0).ToList();
+
+            return new
+            {
+                milliseconds = solved.Count == 0 ? 0 : solved.Max(c => c.LastSolveMs),
+                failed = solved.Any(c => c.LastSolveFailed)
+            };
+        }
+
+        /// <summary>Full layer paths, as the Rhino document has them at this moment.</summary>
+        static List<string> Layers()
+        {
+            var document = Rhino.RhinoDoc.ActiveDoc;
+            if (document == null) return new List<string>();
+
+            return document.Layers
+                .Where(layer => !layer.IsDeleted)
+                .Select(layer => layer.FullPath)
+                .ToList();
+        }
+
+        /// <summary>
+        /// The section heading, which is the component's nickname, and the four characters of its
+        /// id beside it. The nickname of an untouched component is C#, so the mark is what tells
+        /// two of them apart until somebody renames one.
         /// </summary>
         static string Title(PillScriptComponent component)
-        {
-            var name = component.NickName;
+            => string.IsNullOrWhiteSpace(component.NickName) ? component.Name : component.NickName;
 
-            if (!string.IsNullOrWhiteSpace(name) && name != "C#") return name;
-
-            return "Script " + component.InstanceGuid.ToString().Substring(0, 4);
-        }
+        static string Mark(PillScriptComponent component)
+            => component.InstanceGuid.ToString("N").Substring(0, 4).ToUpperInvariant();
 
         /// <summary>
         /// What the panel draws. The value is whatever has been set, falling back to what the
@@ -96,19 +127,46 @@ namespace PillScript.Panel
         /// </summary>
         static object Describe(UiControl control, IReadOnlyDictionary<string, object> held)
         {
-            held.TryGetValue(control.Name ?? string.Empty, out var value);
+            held.TryGetValue(control.Name ?? string.Empty, out var set);
+            var value = set ?? control.Value;
 
             return new
             {
                 kind = control.Kind,
                 name = control.Name,
                 label = control.Label,
+                note = control.Note,
                 minimum = control.Minimum,
                 maximum = control.Maximum,
                 step = control.Step,
                 options = control.Options,
-                value = value ?? control.Value
+                quiet = control.Quiet,
+                value = Wire(control.Kind, value)
             };
+        }
+
+        /// <summary>A value in the shape the page reads it in.</summary>
+        static object Wire(string kind, object value)
+        {
+            switch (kind)
+            {
+                case "vector":
+                    var vector = value is Vector3d v
+                        ? v
+                        : UiRegistrar.ParseVector(value as string ?? string.Empty, Vector3d.Zero);
+
+                    return new { x = vector.X, y = vector.Y, z = vector.Z };
+
+                case "colour":
+                    var colour = value is Color c
+                        ? c
+                        : UiRegistrar.ParseColour(value as string ?? string.Empty, Color.Gray);
+
+                    return UiRegistrar.WriteColour(colour);
+
+                default:
+                    return value;
+            }
         }
     }
 }

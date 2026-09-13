@@ -152,8 +152,14 @@ namespace PillScript.Panel
 
                 if (!root.TryGetProperty("type", out var type)) return;
 
-                if (type.GetString() == "ready") Publish();
-                else if (type.GetString() == "set") Heard(root);
+                switch (type.GetString())
+                {
+                    case "ready": Publish(); break;
+                    case "set": Heard(root); break;
+                    case "collapse": Collapse(root); break;
+                    case "colour": Pick(root); break;
+                    case "close": Rhino.UI.Panels.ClosePanel(PanelId); break;
+                }
             }
             catch (Exception exception)
             {
@@ -194,7 +200,44 @@ namespace PillScript.Panel
             component.SetUiValue(name, Plain(root.TryGetProperty("value", out var v) ? v : default));
         }
 
-        /// <summary>A JSON value as the plainest CLR type that carries it.</summary>
+        /// <summary>
+        /// Opens the colour picker Rhino uses everywhere else, rather than the browser's own: a
+        /// panel docked beside Layers should pick a colour the way Layers does.
+        /// </summary>
+        static void Pick(System.Text.Json.JsonElement root)
+        {
+            var component = UiPublication.Find(
+                root.TryGetProperty("component", out var id) ? id.GetString() : null);
+
+            var name = root.TryGetProperty("name", out var n) ? n.GetString() : null;
+            if (component == null || name == null) return;
+
+            var colour = UiRegistrar.ParseColour(
+                root.TryGetProperty("value", out var v) ? v.GetString() : null,
+                System.Drawing.Color.Gray);
+
+            if (Rhino.UI.Dialogs.ShowColorDialog(ref colour))
+                component.SetUiValue(name, UiRegistrar.WriteColour(colour));
+        }
+
+        /// <summary>Rolls a section up or down, and keeps it that way in the document.</summary>
+        static void Collapse(System.Text.Json.JsonElement root)
+        {
+            var component = UiPublication.Find(
+                root.TryGetProperty("component", out var id) ? id.GetString() : null);
+
+            if (component == null) return;
+
+            component.SetCollapsed(
+                root.TryGetProperty("value", out var value) &&
+                value.ValueKind == System.Text.Json.JsonValueKind.True);
+        }
+
+        /// <summary>
+        /// A JSON value as the plainest CLR type that carries it. A vector arrives as three
+        /// numbers and is kept as text, so that what the document stores stays three kinds wide
+        /// rather than growing one for every control that comes along.
+        /// </summary>
         static object Plain(System.Text.Json.JsonElement value)
         {
             switch (value.ValueKind)
@@ -203,6 +246,15 @@ namespace PillScript.Panel
                 case System.Text.Json.JsonValueKind.True: return true;
                 case System.Text.Json.JsonValueKind.False: return false;
                 case System.Text.Json.JsonValueKind.String: return value.GetString();
+
+                case System.Text.Json.JsonValueKind.Object:
+                    return value.TryGetProperty("x", out var x) &&
+                           value.TryGetProperty("y", out var y) &&
+                           value.TryGetProperty("z", out var z)
+                        ? UiRegistrar.WriteVector(
+                            new Rhino.Geometry.Vector3d(x.GetDouble(), y.GetDouble(), z.GetDouble()))
+                        : null;
+
                 default: return null;
             }
         }
