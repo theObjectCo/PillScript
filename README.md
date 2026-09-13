@@ -96,6 +96,24 @@ item. `[Description]`, `[Name]`, `[Default]` and `[Optional]` adjust the paramet
 The parameter list is rebuilt after each successful compile. Wires survive as long as the parameter
 keeps its name, its type and its access.
 
+## An example to open
+
+`examples/diffusion-limited-aggregation.gh` grows a dendrite by sending particles in one at a
+time from a circle outside the cluster and freezing each one where it first comes within reach of
+something already stuck. The branching is not designed anywhere in the code: an arm reaching
+outwards is hit before the bay behind it ever gets the chance, and that alone produces the shape.
+
+![A diffusion limited aggregation grown by the example](examples/diffusion-limited-aggregation.png)
+
+Four sliders feed the component, and the circles it produces are drawn by a single Circle CNR.
+The script is in two files, which is the point of showing it: `Script.cs` does the walk, and
+`Aggregate.cs` holds the cluster behind a grid so a walker only ever compares itself against the
+particles near it. Without that grid the run is quadratic and 1500 particles take minutes; with it
+the default settings stick 1500 particles in about a fifth of a second, having walked five million
+steps to do it.
+
+Double-click the component to read it.
+
 ## What the editor knows
 
 Completion, hover, parameter hints and squiggles come from Roslyn, running in the Rhino process
