@@ -17,9 +17,7 @@ namespace PillScript.Scripting
         const long LargestFile = 1024 * 1024;
 
         /// <summary>Folder the project is mirrored into, and where packages are restored.</summary>
-        public string WorkingFolder => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "PillScript", "projects", Id.ToString("N"));
+        public string WorkingFolder => ProjectCache.FolderFor(Id);
 
         /// <summary>
         /// Writes the project to the working folder, clears out files that were deleted and

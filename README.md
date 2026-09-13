@@ -255,7 +255,9 @@ Edits made outside are picked up by a watcher, and the component goes stale as i
 typed in the editor.
 
 Sources live in the `.gh` file, so sending someone a definition sends the code with it. The folder
-is a working copy.
+is a working copy, and is treated as one: a folder nothing has compiled from in thirty days is
+deleted when Grasshopper next loads, and reopening that definition writes it back. What is lost is
+the restore sitting in it, which the next compile does again.
 
 `PackageReference` entries in `Script.csproj` are restored with the .NET SDK on the next compile
 and used by both the component and the IDE. `Reference` entries with a `HintPath` work too, for a

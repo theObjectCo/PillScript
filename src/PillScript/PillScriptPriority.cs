@@ -13,6 +13,9 @@ namespace PillScript
     /// The Rhino panel is registered here too, and for the opposite reason: Rhino wants to know
     /// about a panel before anybody asks for one, so that a document reopened with a published
     /// component finds the tab already there.
+    ///
+    /// The working folders are swept here as well, in the background, since this runs once and
+    /// early and nothing else in the plugin has a moment that belongs to no document.
     /// </summary>
     public class PillScriptPriority : GH_AssemblyPriority
     {
@@ -24,6 +27,7 @@ namespace PillScript
         {
             ScriptBridgeServer.Start();
             RegisterPanel();
+            Scripting.ProjectCache.SweepLater();
 
             return GH_LoadingInstruction.Proceed;
         }
