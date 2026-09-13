@@ -18,9 +18,8 @@ namespace PillScript.Scripting
         /// edited: adding a line here is how a script reaches a namespace it uses often without
         /// repeating the using in each file.
         /// </summary>
-        public const string Usings = @"// Namespaces every file in this script starts with, so no file has to repeat them. Add a line
-// here rather than a using at the top of each file; this is an ordinary file of the project and
-// the next compile picks it up.
+        public const string Usings = @"// Namespaces every file in this script starts with, so that no file has to repeat them. This is
+// an ordinary file of the project: add a line here and the next compile picks it up.
 global using System;
 global using System.Collections;
 global using System.Collections.Generic;
@@ -100,8 +99,8 @@ public class Script : ScriptBase
         /// </summary>
         public const string Readme = @"# This script
 
-The component on the canvas takes its shape from the code in this folder. Edit, press Compile,
-and its inputs and outputs become whatever the `RunScript` signature says they are.
+The component on the canvas is defined by the code in this folder. Edit it, press Compile, and its
+inputs and outputs follow the `RunScript` signature.
 
 ## Inputs and outputs
 
@@ -113,9 +112,9 @@ how the data arrives.
 - `List<Point3d> corners` is a list, and `Point3d[]` does the same
 - `DataTree<Curve> curves` is a tree, and `GH_Structure<IGH_Goo>` does the same
 
-A `GH_Structure` of goo arrives as it is. A `DataTree` of a plain type has each item converted, and
-an item that will not convert is left out with the component saying which parameter and which
-branch it came from; a tree can therefore be shorter inside the script than it was on the wire.
+A `GH_Structure` of goo arrives as it is. A `DataTree` of a plain type has each item converted. An
+item that will not convert is left out, and the component reports which parameter and which branch
+it came from, so a tree can be shorter inside the script than it was on the wire.
 
 Four attributes fill in the rest, all of them optional.
 
@@ -134,20 +133,18 @@ wrong.
 
 ## Compiling
 
-Nothing is compiled until you ask for it. Press `F5` or `Ctrl-B`. Until then the component goes
-on running the build it already has, and wears a coloured plate on the canvas to say the sources
-have moved past it.
+Nothing compiles until you ask. Press `F5` or `Ctrl-B`. Until then the component keeps running its
+last build and shows a coloured plate on the canvas to mark it as out of date.
 
 `Ctrl-S` saves without building. Saving happens on its own a moment after typing stops anyway.
 
 ## What survives between runs
 
-`RunScript` is called once per item rather than once per solve. Send a list of three numbers into
-an input declared as a single value and it runs three times, with `Iteration` counting 0, 1, 2.
+`RunScript` is called once per item, not once per solve. Send a list of three numbers into an input
+declared as a single value and it runs three times, with `Iteration` counting 0, 1, 2.
 
-The class is turned into an object once per build, and every one of those calls runs on that same
-object. So a field keeps what you put in it from one call to the next, and a field initialiser
-runs once rather than on every iteration:
+The class is turned into an object once per build, and all those calls run on that same object. A
+field therefore keeps its value from one call to the next, and a field initialiser runs once:
 
 ```csharp
 int calls;                          // 1, 2, 3, 4 ... across iterations and solves
@@ -164,9 +161,9 @@ want is one solve's worth.
 
 ## Controls in the Rhino panel
 
-A script can put controls in a Rhino panel, docked beside Layers and Properties. Override
-`RegisterUi` and register them. Each call does two things at once: it tells the panel what to
-draw, and it writes what that control currently holds into the variable you hand it.
+A script can register controls that appear in a Rhino panel, docked with Layers and Properties.
+Override `RegisterUi`. Each call describes one control for the panel and assigns that control's
+current value to the variable passed in.
 
 ```csharp
 double radius;
@@ -184,14 +181,14 @@ public override void RegisterUi(UiRegistrar register)
 }
 ```
 
-`RegisterUi` runs before every solve, so by the time `RunScript` reads `radius` it holds what the
-panel holds. Nothing is looked up by name at the point of use.
+`RegisterUi` runs before every solve, so `radius` holds the panel's value by the time `RunScript`
+reads it. No lookup by name is needed at the point of use.
 
-Then turn on **Publish to panel** in the component's menu. The panel stacks a section for every
-published component, so several scripts can share it. Clicking a heading rolls its section up and
-dragging one moves it among the others; both are kept with the document. The heading takes the
-first `Caption` as its name, so the example above gives a section called Outline. Renaming the
-component on the canvas takes the heading back.
+Then turn on **Publish to panel** in the component's menu. The panel holds a section for every
+published component, so several scripts can share it. Clicking a heading rolls its section up,
+dragging one moves it among the others, and both are saved with the document. The heading is named
+after the first `Caption`, so the example above gives a section called Outline. Renaming the
+component on the canvas overrides that.
 
 The controls:
 
@@ -209,23 +206,23 @@ The controls:
 | `Button(name, out bool, quiet:, icon:)` | something to press |
 | `Caption(text)` | a line of explanation |
 
-`Choice` takes any list, so the options can be worked out rather than written down. A quiet button
-is drawn plainly, for the one standing beside the main action, and `icon:` puts a glyph on it:
-`bake`, `run`, `refresh`, `add` or `remove`.
+`Choice` takes any list, so the options can be computed. A quiet button is drawn without the
+accent colour, for a secondary action, and `icon:` puts a glyph on one: `bake`, `run`, `refresh`,
+`add` or `remove`.
 
-A `Button` is true for the one solve its press caused and false on every other, so acting on it
-needs no memory of whether you already did.
+A `Button` is true for the one solve its press caused and false on every other solve, so acting on
+it needs no record of whether it was already handled.
 
-Values are kept in the Grasshopper document, so they survive saving and reopening. Compiling does
-not clear them; a control that disappears from `RegisterUi` takes its value with it.
+Values are saved in the Grasshopper document and survive reopening. Compiling does not clear them.
+A control removed from `RegisterUi` is forgotten together with its value.
 
-The panel is a web page, and a `ui.css` in this folder is appended after its own stylesheet, so
-any rule in there wins. A section is `.section`, holding a `.head` and a `.body`; a row is
-`.widget` with its `label` and, for numbers, a `.reading`; the rest are `.caption`, `.field`,
-`.slider`, `.segmented`, `.picker`, `.check`, `.press` and `.problem`. The colours are CSS
-variables on `:root`, so a line like `--accent: #b05c18;` restyles more than a rule would.
-That styling is not scoped to this script: a `ui.css` restyles the whole panel, including the
-sections other components published.
+The panel is a web page, and a `ui.css` in this folder is appended after its own stylesheet, so any
+rule in it wins. A section is `.section`, holding a `.head` and a `.body`. A row is `.widget` with
+its `label` and, for numbers, a `.reading`. The rest are `.caption`, `.field`, `.slider`,
+`.segmented`, `.picker`, `.check`, `.press` and `.problem`. The colours are CSS variables on
+`:root`: setting `--accent: #b05c18;` recolours everything that uses it. This styling is not scoped
+to one script. A `ui.css` restyles the whole panel, including the sections other components
+published.
 
 ## What ScriptBase gives you
 
@@ -237,12 +234,12 @@ sections other components published.
 
 Add one with `+` in the sidebar. Every `.cs` file here compiles together, so a class in one is
 visible from another with no `using` needed. `GlobalUsings.cs` holds the namespaces every file
-starts with; add a line there rather than repeating a `using` in each file.
+starts with. Add a line there and no file has to repeat it.
 
 A file may be anything, not only C#: notes, a json table to read at run time, a shader. They all
-live in the folder beside the sources and travel inside the Grasshopper document with it. What
-they may not be is binary or larger than a megabyte, and a file like that put in the folder by
-hand is left where it is rather than swallowed.
+live in the folder beside the sources and travel inside the Grasshopper document. Binary files and
+files larger than a megabyte are not taken into the document; one placed in the folder by hand
+stays there and is left alone.
 
 `Script.cs`, `Script.csproj` and `GlobalUsings.cs` cannot be renamed or deleted. This file can.
 
@@ -259,11 +256,11 @@ paths that work on only one machine.
 
 ## The icon
 
-**Phosphor icon** in the component's menu takes any name from phosphoricons.com, say `gear-six`,
-`flask` or `waves-bold`. That drawing then stands on the canvas and at the head of this script's
-section in the panel. An empty name gives the pill back. The icon is fetched once and kept on
-disk, so it costs nothing after the first time and nothing at all offline, where the pill stands
-in until the fetch can happen.
+**Phosphor icon** in the component's menu takes any name from phosphoricons.com, for example
+`gear-six`, `flask` or `waves-bold`. Type it on the line in the menu and press Enter. The drawing
+is then used on the canvas and at the head of this script's section in the panel. An empty name
+restores the pill. Each icon is fetched once and kept on disk. Without a route to the internet the
+component keeps the pill, and the icon appears once a fetch succeeds.
 
 ## Keys
 
