@@ -64,12 +64,7 @@ namespace PillScript.Scripting
             foreach (var file in project.SourceFiles)
                 trees.Add(CSharpSyntaxTree.ParseText(Source(file.Content), parseOptions, file.Name));
 
-            var options = new CSharpCompilationOptions(
-                OutputKind.DynamicallyLinkedLibrary,
-                optimizationLevel: OptimizationLevel.Release,
-                allowUnsafe: true,
-                platform: Platform.X64,
-                concurrentBuild: true);
+            var options = CompilationRules.Build();
 
             var assemblyName = "Script_" + project.Id.ToString("N") + "_" + DateTime.UtcNow.Ticks.ToString("x");
             var compilation = CSharpCompilation.Create(

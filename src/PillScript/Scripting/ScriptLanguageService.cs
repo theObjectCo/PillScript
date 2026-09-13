@@ -270,8 +270,7 @@ namespace PillScript.Scripting
                 name: "Script",
                 assemblyName: "Script",
                 language: LanguageNames.CSharp,
-                compilationOptions: new CSharpCompilationOptions(
-                    OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true),
+                compilationOptions: CompilationRules.Edit(),
                 parseOptions: new CSharpParseOptions(LanguageVersion.Latest),
                 metadataReferences: references.Compile);
 
