@@ -30,6 +30,6 @@ button.action:hover { background: #026ec1; }
 
 .none { padding: 16px 12px; color: #6e6e6e; }
 
-/* A ui.json that will not parse says so here rather than leaving an empty panel and a mystery. */
+/* A RegisterUi that throws says so here, rather than leaving an empty panel and a mystery. */
 .problem { margin: 10px 12px; padding: 8px 10px; border-left: 2px solid #f14c4c;
            background: #2b1d1d; color: #f4a3a3; }
