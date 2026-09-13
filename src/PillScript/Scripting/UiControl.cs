@@ -20,6 +20,9 @@ namespace PillScript
         /// <summary>A button drawn plainly, for the one standing beside the main action.</summary>
         public bool Quiet { get; internal set; }
 
+        /// <summary>A glyph on a button: bake, run, refresh, add or remove.</summary>
+        public string Icon { get; internal set; }
+
         /// <summary>What the script said the control should start at.</summary>
         public object Value { get; internal set; }
     }

@@ -8,7 +8,7 @@
   SP.builders.toggle = function (w, send) {
     var check = SP.el('div', 'check');
     var box = SP.el('div', 'box');
-    box.appendChild(SP.glyph('M5 12.5l4.5 4.5L19 7.5', 2.6));
+    box.appendChild(SP.el('div', 'knob'));
     check.appendChild(box);
     if (w.note) check.appendChild(SP.el('span', 'note', w.note));
 
@@ -29,6 +29,82 @@
       patch: function (value) { held = !!value; show(held); }
     };
   };
+
+  // A list of the panel's own rather than a select element. The dropdown a select opens is a
+  // window of its own, and a window opened from a docked panel is at the mercy of whatever Rhino
+  // does with focus; this one is drawn in the page and cannot be taken away.
+  function dropdown(w, options, send, show) {
+    var read = show || function (value) { return value; };
+
+    var box = SP.el('div', 'field picker');
+    var picked = SP.el('span', 'picked', read(w.value || ''));
+    picked.dataset.value = w.value || '';
+    var chevron = SP.glyph('M6 9l6 6 6-6', 2);
+    chevron.setAttribute('class', 'chev');
+
+    box.appendChild(picked);
+    box.appendChild(SP.el('div', 'spacer'));
+    box.appendChild(chevron);
+
+    var list = null;
+
+    function shut() {
+      if (!list) return;
+      list.remove();
+      list = null;
+      document.removeEventListener('pointerdown', away, true);
+      window.removeEventListener('keydown', escaped, true);
+    }
+
+    function away(event) { if (!list.contains(event.target)) shut(); }
+    function escaped(event) { if (event.key === 'Escape') shut(); }
+
+    function open() {
+      if (list) { shut(); return; }
+
+      list = SP.el('div', 'list');
+
+      options.forEach(function (option) {
+        var item = SP.el('div', option === picked.dataset.value ? 'on' : null, read(option));
+        item.onpointerdown = function (event) {
+          event.stopPropagation();
+          picked.textContent = read(option);
+          picked.dataset.value = option;
+          shut();
+          send(w.name, option);
+        };
+        list.appendChild(item);
+      });
+
+      // Fixed, so the list is not clipped by the section it was opened from. Above the box when
+      // there is no room below, which is most of the time for a section near the foot.
+      var box2 = box.getBoundingClientRect();
+      list.style.left = box2.left + 'px';
+      list.style.width = box2.width + 'px';
+
+      document.body.appendChild(list);
+
+      var height = list.getBoundingClientRect().height;
+      var below = window.innerHeight - box2.bottom;
+
+      list.style.top = (height > below && box2.top > height ? box2.top - height : box2.bottom) + 'px';
+
+      document.addEventListener('pointerdown', away, true);
+      window.addEventListener('keydown', escaped, true);
+    }
+
+    box.onclick = open;
+
+    return {
+      node: SP.row(w, box),
+      busy: function () { return !!list; },
+      patch: function (value) {
+        if (!value) return;
+        picked.textContent = read(value);
+        picked.dataset.value = value;
+      }
+    };
+  }
 
   // Up to three short options are worth showing all at once; anything longer is a list.
   SP.builders.choice = function (w, send) {
@@ -52,21 +128,7 @@
       return { node: SP.row(w, bar), patch: show };
     }
 
-    var select = document.createElement('select');
-    options.forEach(function (option) {
-      var item = document.createElement('option');
-      item.value = option;
-      item.textContent = option;
-      select.appendChild(item);
-    });
-
-    select.value = w.value;
-    select.onchange = function () { send(w.name, select.value); };
-
-    return {
-      node: SP.row(w, select),
-      patch: function (value) { select.value = value; }
-    };
+    return dropdown(w, options, send);
   };
 
   SP.builders.colour = function (w, send, ask) {
@@ -89,49 +151,51 @@
   };
 
   SP.builders.layer = function (w, send, ask, state) {
-    var select = document.createElement('select');
     var layers = state.layers || [];
 
+    // A layer since renamed or deleted would leave the box blank, which reads as a missing value
+    // rather than a stale one, so it is kept in the list.
     if (w.value && layers.indexOf(w.value) < 0) layers = [w.value].concat(layers);
 
-    layers.forEach(function (layer) {
-      var item = document.createElement('option');
-      item.value = layer;
-      item.textContent = layer;
-      select.appendChild(item);
-    });
-
-    select.value = w.value || '';
-
-    // A layer since renamed or deleted would leave the box blank, which reads as a missing value
-    // rather than a stale one.
-    if (!select.value && layers.length) select.value = layers[0];
-
-    select.onchange = function () { send(w.name, select.value); };
-
-    return {
-      node: SP.row(w, select),
-      patch: function (value) { if (value) select.value = value; }
-    };
+    // Rhino writes a nested layer as Parent::Child; the panel gives the colons room to breathe,
+    // and sends back the path as the document has it.
+    return dropdown(
+      { name: w.name, label: w.label, value: w.value || layers[0] || '' }, layers, send,
+      function (path) { return path.split('::').join(' :: '); });
   };
 
   SP.builders.caption = function (w) {
     return { node: SP.el('div', 'caption', w.label || ''), patch: function () { } };
   };
 
-  // A run of buttons becomes one row, under an empty label, the way a dialog puts its actions.
-  SP.buttons = function (widgets, send) {
-    var node = SP.el('div', 'widget');
-    node.appendChild(SP.el('label', null, ''));
+  // The glyphs a button may ask for by name. Anything else is drawn without one.
+  var icons = {
+    bake: 'M12 4v10M8 11l4 4 4-4M5 19h14',
+    run: 'M7 4.5l12 7.5-12 7.5z',
+    refresh: 'M19 12a7 7 0 1 1-2.05-4.95M19 4v4h-4',
+    add: 'M12 6v12M6 12h12',
+    remove: 'M6 12h12'
+  };
 
+  // A run of buttons becomes one row across the card, the way a dialog puts its actions.
+  SP.buttons = function (widgets, send) {
     var holder = SP.el('div', 'buttons');
+
     widgets.forEach(function (w) {
-      var press = SP.el('div', 'press' + (w.quiet ? ' quiet' : ''), w.label || w.name);
+      var press = SP.el('div', 'press' + (w.quiet ? ' quiet' : ''));
+
+      if (icons[w.icon]) {
+        var glyph = SP.glyph(icons[w.icon], 1.8);
+        glyph.setAttribute('stroke-linejoin', 'round');
+        glyph.setAttribute('class', 'mark');
+        press.appendChild(glyph);
+      }
+
+      press.appendChild(SP.el('span', null, w.label || w.name));
       press.onclick = function () { send(w.name, true); };
       holder.appendChild(press);
     });
 
-    node.appendChild(holder);
-    return { node: node, patch: function () { } };
+    return { node: holder, patch: function () { } };
   };
 })();

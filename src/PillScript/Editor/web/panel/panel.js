@@ -163,7 +163,7 @@
   }
 
   function chrome(payload) {
-    count.textContent = payload.count === 1 ? '1 script' : payload.count + ' scripts';
+    count.textContent = payload.count + ' UI';
     documentName.textContent = payload.document || '';
 
     var status = payload.status || { milliseconds: 0, failed: false };
@@ -229,7 +229,7 @@
             { kind: 'number', name: 'corners', step: 1, value: 6 },
             { kind: 'choice', name: 'style', options: ['polygon', 'circle', 'rect'], value: 'polygon' },
             { kind: 'text', name: 'name', value: 'outline_a' },
-            { kind: 'button', name: 'bake', label: 'Bake to Rhino' },
+            { kind: 'button', name: 'bake', label: 'Bake to Rhino', icon: 'bake' },
             { kind: 'button', name: 'reset', label: 'Reset', quiet: true }
           ]
         },

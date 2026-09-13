@@ -113,7 +113,6 @@
 
     number: function (w, send) {
       var made = SP.field();
-      made.input.className = 'number';
       made.input.value = SP.shown(SP.number(w.value, 0), w.step || 0);
 
       var step = w.step || 1;
@@ -151,8 +150,7 @@
       var inputs = {};
 
       ['x', 'y', 'z'].forEach(function (axis) {
-        var made = SP.field();
-        made.input.className = 'number';
+        var made = SP.field(axis);
         made.input.value = Number(value[axis] || 0).toFixed(1);
         made.box.insertBefore(SP.el('span', 'prefix', axis), made.input);
 

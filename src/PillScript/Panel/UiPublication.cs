@@ -157,6 +157,7 @@ namespace PillScript.Panel
                 step = control.Step,
                 options = control.Options,
                 quiet = control.Quiet,
+                icon = control.Icon,
                 value = Wire(control.Kind, value)
             };
         }

@@ -203,11 +203,12 @@ The controls:
 | `Vector(name, value, out Vector3d)` | three numbers on one row |
 | `Colour(name, value, out Color)` | a swatch opening Rhino's colour picker |
 | `Layer(name, out string)` | a layer of the Rhino document, by full path |
-| `Button(name, out bool, quiet:)` | something to press |
+| `Button(name, out bool, quiet:, icon:)` | something to press |
 | `Caption(text)` | a line of explanation |
 
 `Choice` takes any list, so the options can be worked out rather than written down. A quiet button
-is drawn plainly, for the one standing beside the main action.
+is drawn plainly, for the one standing beside the main action, and `icon:` puts a glyph on it:
+`bake`, `run`, `refresh`, `add` or `remove`.
 
 A `Button` is true for the one solve its press caused and false on every other, so acting on it
 needs no memory of whether you already did.
@@ -218,7 +219,8 @@ not clear them; a control that disappears from `RegisterUi` takes its value with
 The panel is a web page, and a `ui.css` in this folder is appended after its own stylesheet, so
 any rule in there wins. A section is `.section`, holding a `.head` and a `.body`; a row is
 `.widget` with its `label` and, for numbers, a `.reading`; the rest are `.caption`, `.field`,
-`.slider`, `.segmented`, `.check`, `.press` and `.problem`.
+`.slider`, `.segmented`, `.picker`, `.check`, `.press` and `.problem`. The colours are CSS
+variables on `:root`, so a line like `--accent: #b05c18;` restyles more than a rule would.
 That styling is not scoped to this script: a `ui.css` restyles the whole panel, including the
 sections other components published.
 

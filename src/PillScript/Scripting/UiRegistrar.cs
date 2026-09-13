@@ -139,11 +139,22 @@ namespace PillScript
         /// <summary>
         /// Something to press. It is true for the one solve the press caused and false on every
         /// other, so a script can act on it without having to remember whether it already did.
-        /// A quiet one is drawn plainly, for the button standing beside the main action.
+        /// A quiet one is drawn plainly, for the button standing beside the main action, and one
+        /// given an icon carries a glyph: bake, run, refresh, add or remove.
         /// </summary>
-        public void Button(string name, out bool pressed, string label = null, bool quiet = false)
+        public void Button(string name, out bool pressed,
+                           string label = null, bool quiet = false, string icon = null)
         {
-            Add(new UiControl { Kind = "button", Name = name, Label = label, Quiet = quiet, Value = false });
+            Add(new UiControl
+            {
+                Kind = "button",
+                Name = name,
+                Label = label,
+                Quiet = quiet,
+                Icon = icon,
+                Value = false
+            });
+
             pressed = AsFlag(name, false);
         }
 

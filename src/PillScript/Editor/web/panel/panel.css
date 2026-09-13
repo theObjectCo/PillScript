@@ -1,36 +1,54 @@
-/* The shell: the bars top and bottom, the group each script gets, and the row a control sits in.
-   The controls themselves are in controls.css.
+/* The shell: the bars top and bottom, and the card each script gets. The controls themselves are
+   in controls.css.
 
    A published component may carry a ui.css of its own; the host sends it across and the page
    appends it after these, so the author's rules win by cascade order rather than by fighting for
    specificity.
 
-   The rules the layout keeps to: the label column is 84px and one colour, never coloured by
-   type; controls are 24px tall with 8px between them; #0078d4 marks what is active or primary
-   and nothing else; red belongs to the pill and to errors; numbers are monospace, right aligned,
-   in a fixed 48px. */
+   The rules the layout keeps to: the label column is 80px and one colour, never coloured by type;
+   controls are 26px tall with 9px between them and 34px group headings; the accent is the
+   #1b8fe0 to #0a5f9e gradient and marks only what is active or primary; red belongs to the pill
+   and to errors; the x, y and z of a vector carry Rhino's own red, green and blue. */
+
+/* Numbers are set in JetBrains Mono, carried in the package rather than fetched: a panel docked
+   in Rhino should not want the network to draw itself. Latin subset, the weight axis covering 400
+   to 500, under the SIL Open Font Licence kept beside it in fonts/. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: block;
+  src: url('fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
 
 :root {
   color-scheme: dark;
 
-  --panel: #252526;
-  --bar: #2d2d2d;
-  --group: #2a2a2b;
-  --groupLit: #313132;
-  --edge: #191919;
-  --rule: #1f1f1f;
-  --field: #313131;
-  --fieldEdge: #3c3c3c;
-  --fieldEdgeLit: #545454;
+  --panel: #232324;
+  --card: #262628;
+  --cardEdge: #303032;
+  --bar: linear-gradient(#323234, #2a2a2c);
+  --head: linear-gradient(#2f2f31, #2a2a2c);
+  --headLit: linear-gradient(#37373a, #303033);
+  --foot: linear-gradient(#2d2d2f, #262628);
+  --edge: #161616;
+  --field: linear-gradient(#2c2c2e, #303032);
+  --fieldEdge: #3c3c3e;
+  --fieldEdgeLit: #5a5a5c;
+  --sunk: #1e1e20;
+  --sunkEdge: #313133;
   --ink: #cccccc;
-  --inkBright: #e4e4e4;
+  --inkBright: #ededed;
+  --inkTitle: #e6e6e6;
   --label: #9d9d9d;
   --muted: #6e6e6e;
-  --accent: #0078d4;
-  --accentLit: #026ec1;
-  --track: #4a4a4a;
-  --handle: #d6d6d6;
-  --mono: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+  --accent: #1b8fe0;
+  --accentRun: linear-gradient(90deg, #0a5f9e, #1b8fe0);
+  --press: linear-gradient(#0e86d4, #0067b8);
+  --pressLit: linear-gradient(#1e94dd, #0b73c4);
+  --pressEdge: #0a5f9e;
+  --track: #3a3a3c;
+  --mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
 }
 
 html, body {
@@ -53,72 +71,111 @@ body { display: flex; flex-direction: column; }
 /* ----- the bars top and bottom ------------------------------------------------------------- */
 
 #chrome {
-  height: 32px;
+  height: 38px;
   flex: none;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 6px 0 10px;
+  gap: 9px;
+  padding: 0 6px 0 12px;
   background: var(--bar);
   border-bottom: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-#chrome .name { color: var(--ink); }
-#count { font-size: 10px; }
+#chrome .pill { width: 15px; height: 15px; }
+#chrome .name { font-weight: 600; letter-spacing: 0.02em; color: var(--inkTitle); }
+
+#count {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #9aa4ad;
+  background: rgba(0, 120, 212, 0.16);
+  border: 1px solid rgba(0, 120, 212, 0.35);
+  border-radius: 8px;
+  padding: 1px 7px;
+}
 
 .tool {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
-  border-radius: 2px;
+  border-radius: 4px;
   color: var(--label);
   cursor: pointer;
 }
 
-.tool:hover { background: var(--fieldEdge); color: #ffffff; }
+.tool:hover { background: rgba(255, 255, 255, 0.09); color: #ffffff; }
 
 #status {
-  height: 26px;
+  height: 28px;
   flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px;
-  background: var(--bar);
+  padding: 0 11px;
+  background: var(--foot);
   border-top: 1px solid var(--edge);
   font-family: var(--mono);
   font-size: 10px;
-  color: #8a8a8a;
+  color: #9a9a9a;
 }
 
-#lamp { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #3fa34d; }
-#lamp.failed { background: #c02414; }
-#document { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#lamp {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: #3fa34d;
+  box-shadow: 0 0 6px rgba(63, 163, 77, 0.8);
+}
 
-/* ----- groups ------------------------------------------------------------------------------ */
+#lamp.failed { background: #c02414; box-shadow: 0 0 6px rgba(192, 36, 20, 0.8); }
+#document { color: #7e7e80; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-#sections { flex: 1; min-height: 0; overflow: auto; }
+/* ----- a card for each script --------------------------------------------------------------- */
 
-.section { border-bottom: 1px solid var(--rule); }
+#sections {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section {
+  flex: none;
+  border: 1px solid var(--cardEdge);
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
 
 .head {
-  height: 30px;
+  height: 34px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   padding: 0 10px;
-  background: var(--group);
+  background: var(--head);
+  border-bottom: 1px solid var(--cardEdge);
   cursor: pointer;
   user-select: none;
 }
 
-.head:hover { background: var(--groupLit); }
+.head:hover { background: var(--headLit); }
 
-/* While a section is being dragged into place among the others. */
-.section.carried { opacity: 0.75; }
-.section.carried .head { background: var(--groupLit); cursor: grabbing; }
-.head .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.head .title {
+  font-weight: 600;
+  color: var(--inkTitle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .head .chevron {
   width: 10px;
@@ -126,15 +183,28 @@ body { display: flex; flex-direction: column; }
   flex: none;
   color: var(--label);
   transform: rotate(90deg);
-  transition: transform 80ms linear;
+  transition: transform 120ms ease;
+}
+
+.head .mark {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #8a8a8a;
+  background: var(--sunk);
+  border: 1px solid #333335;
+  border-radius: 3px;
+  padding: 2px 6px;
 }
 
 .section.shut .chevron { transform: rotate(0deg); }
 .section.shut .body { display: none; }
+.section.shut { box-shadow: none; }
 
-.head .mark { font-size: 10px; letter-spacing: 0.08em; color: var(--muted); }
+/* While a section is being dragged into place among the others. */
+.section.carried { opacity: 0.75; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5); }
+.section.carried .head { background: var(--headLit); cursor: grabbing; }
 
-.body { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.body { padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 9px; }
 
 .empty { padding: 16px 12px; color: var(--muted); }
 
@@ -142,12 +212,12 @@ body { display: flex; flex-direction: column; }
 
 .widget {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-columns: 80px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
 }
 
-.widget.measured { grid-template-columns: 84px minmax(0, 1fr) 48px; }
+.widget.measured { grid-template-columns: 80px minmax(0, 1fr) 54px; }
 
 .widget > label {
   font-size: 12px;
@@ -157,6 +227,16 @@ body { display: flex; flex-direction: column; }
   white-space: nowrap;
 }
 
-.reading { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; }
+.reading {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--inkTitle);
+  text-align: right;
+  background: var(--sunk);
+  border: 1px solid var(--sunkEdge);
+  border-radius: 3px;
+  padding: 3px 5px;
+}
+
 .caption { color: var(--ink); margin-top: 4px; }
 .caption:first-child { margin-top: 0; }

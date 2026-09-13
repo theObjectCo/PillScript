@@ -1,43 +1,74 @@
 /* The controls themselves, in the three states the design calls for: at rest, under the pointer,
-   and the accent reserved for what is active or primary. The shell they sit in is panel.css. */
+   and the accent gradient reserved for what is active or primary. The shell is panel.css. */
 
 /* ----- slider ------------------------------------------------------------------------------ */
 
-.slider { height: 20px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
-.slider .track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: var(--track); }
-.slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--accent); }
+.slider { height: 22px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+
+.slider .track {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--track);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.slider .fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: var(--accentRun);
+  box-shadow: 0 0 8px rgba(27, 143, 224, 0.45);
+}
 
 .slider .grip {
   position: absolute;
   top: -5px;
-  width: 10px;
-  height: 14px;
-  margin-left: -5px;
-  border-radius: 2px;
-  background: var(--handle);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  width: 11px;
+  height: 15px;
+  margin-left: -5.5px;
+  border-radius: 3px;
+  background: linear-gradient(#f2f2f2, #cfcfcf);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.slider:hover .track { background: #565656; }
-.slider:hover .fill { background: #2b8fe0; }
-.slider:hover .grip { top: -6px; width: 12px; height: 16px; margin-left: -6px; background: #ffffff; }
+.slider:hover .track { background: #454547; }
+.slider:hover .fill { background: linear-gradient(90deg, #0b73c4, #37a6ee); }
+
+.slider:hover .grip {
+  top: -6px;
+  width: 13px;
+  height: 17px;
+  margin-left: -6.5px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
 
 /* ----- fields ------------------------------------------------------------------------------ */
 
 .field {
   display: flex;
   align-items: center;
-  height: 24px;
+  height: 26px;
   box-sizing: border-box;
   background: var(--field);
   border: 1px solid var(--fieldEdge);
-  border-radius: 2px;
-  padding: 0 2px 0 8px;
+  border-radius: 4px;
+  padding: 0 2px 0 9px;
   min-width: 0;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .field:hover { border-color: var(--fieldEdgeLit); }
-.field:focus-within { border-color: var(--accent); }
+
+.field:focus-within {
+  background: #2c2c2e;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(27, 143, 224, 0.22);
+}
 
 .field input {
   flex: 1;
@@ -47,46 +78,35 @@
   outline: none;
   padding: 0;
   color: var(--inkBright);
-  font: inherit;
+  font-family: var(--mono);
+  font-size: 11px;
 }
 
-.field input.number { font-family: var(--mono); font-size: 11px; }
-.field .prefix { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-right: 5px; }
+.field .prefix { font-family: var(--mono); font-size: 11px; margin-right: 6px; }
 
-.spin { display: flex; flex-direction: column; width: 16px; flex: none; }
-.spin div { height: 10px; display: grid; place-items: center; color: var(--label); cursor: pointer; }
+.spin { display: flex; flex-direction: column; width: 18px; flex: none; }
+.spin div { height: 11px; display: grid; place-items: center; color: var(--label); cursor: pointer; }
 .spin div:hover { color: #ffffff; }
 .spin svg { width: 9px; height: 9px; }
 
-.trio { display: flex; gap: 4px; min-width: 0; }
-.trio .field { flex: 1; min-width: 0; padding-right: 6px; }
-
-select {
-  height: 24px;
-  box-sizing: border-box;
-  width: 100%;
-  background: var(--field);
-  color: var(--inkBright);
-  border: 1px solid var(--fieldEdge);
-  border-radius: 2px;
-  padding: 0 4px 0 8px;
-  font: inherit;
-  font-size: 11px;
-  outline: none;
-}
-
-select:hover { border-color: var(--fieldEdgeLit); }
-select:focus { border-color: var(--accent); }
+/* The axis letters carry Rhino's own red, green and blue, which is the one place a control is
+   coloured by what it holds. */
+.trio { display: flex; gap: 5px; min-width: 0; }
+.trio .field { flex: 1; min-width: 0; padding: 0 7px; }
+.trio .x .prefix { color: #e5705c; }
+.trio .y .prefix { color: #7fb069; }
+.trio .z .prefix { color: #6f9fd8; }
 
 /* ----- picking ----------------------------------------------------------------------------- */
 
 .segmented {
   display: flex;
-  height: 24px;
+  height: 26px;
   border: 1px solid var(--fieldEdge);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
-  background: var(--field);
+  background: #2a2a2c;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .segmented div {
@@ -102,64 +122,140 @@ select:focus { border-color: var(--accent); }
 }
 
 .segmented div:last-child { border-right: 0; }
-.segmented div:hover { background: var(--fieldEdge); color: #ffffff; }
-.segmented div.on { background: var(--accent); color: #ffffff; }
+.segmented div:hover { background: #38383a; color: #ffffff; }
+.segmented div.on { background: var(--press); color: #ffffff; }
 
-.check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+/* The list a picker opens is drawn here rather than by a select element: the window a select
+   opens is outside the page, and one opened from a docked panel is at Rhino's mercy. */
+
+.picker { cursor: pointer; padding: 0 5px 0 9px; }
+
+.picker .picked {
+  font-size: 11px;
+  color: var(--inkBright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker .chev { width: 12px; height: 12px; flex: none; color: var(--label); }
+
+.list {
+  position: fixed;
+  z-index: 10;
+  box-sizing: border-box;
+  max-height: 240px;
+  overflow: auto;
+  background: #1c1c1e;
+  border: 1px solid #454547;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.list div {
+  padding: 5px 9px;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list div:hover { background: #2a2a2c; color: #ffffff; }
+.list div.on { background: linear-gradient(90deg, #0b5f9c, #094b7d); color: #ffffff; }
+
+/* ----- the switch and the swatch ------------------------------------------------------------ */
+
+.check { display: flex; align-items: center; gap: 9px; cursor: pointer; }
 
 .check .box {
+  width: 28px;
+  height: 16px;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: 9px;
+  padding: 2px;
+  display: flex;
+  background: var(--track);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  transition: background 140ms ease;
+}
+
+.check .knob {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(#e8e8e8, #c6c6c6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: transform 140ms ease;
+}
+
+.check.on .box {
+  background: var(--accentRun);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 8px rgba(27, 143, 224, 0.35);
+}
+
+.check.on .knob { background: #ffffff; transform: translateX(12px); }
+.check .note { font-size: 12px; color: var(--label); }
+
+.swatch { cursor: pointer; padding: 0 9px; gap: 9px; }
+
+.swatch .chip {
   width: 14px;
   height: 14px;
   flex: none;
-  border-radius: 2px;
-  display: grid;
-  place-items: center;
-  background: var(--field);
-  border: 1px solid #6b6b6b;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.45);
 }
 
-.check.on .box { background: var(--accent); border-color: var(--accent); }
-.check .box svg { width: 10px; height: 10px; opacity: 0; }
-.check.on .box svg { opacity: 1; }
-.check .note { font-size: 12px; color: var(--label); }
-
-.swatch { cursor: pointer; }
-.swatch .chip { width: 12px; height: 12px; flex: none; border-radius: 2px; border: 1px solid #00000066; margin-right: 8px; }
 .swatch .hex { font-family: var(--mono); font-size: 11px; color: var(--inkBright); }
 
 /* ----- pressing, and what went wrong -------------------------------------------------------- */
 
-.buttons { display: flex; gap: 6px; }
+.buttons { display: flex; gap: 7px; margin-top: 3px; }
 
 .press {
-  height: 26px;
-  padding: 0 12px;
-  display: grid;
-  place-items: center;
-  border-radius: 2px;
-  background: var(--accent);
+  height: 28px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 4px;
+  background: var(--press);
+  border: 1px solid var(--pressEdge);
   color: #ffffff;
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-.press:hover { background: var(--accentLit); }
-.press.quiet { background: var(--field); border: 1px solid var(--fieldEdge); color: var(--ink); }
-.press.quiet:hover { background: var(--fieldEdge); }
+.press:hover { background: var(--pressLit); }
+.press .mark { width: 13px; height: 13px; flex: none; }
+
+.press.quiet {
+  background: var(--head);
+  border-color: var(--fieldEdge);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.press.quiet:hover { background: #37373a; color: #ffffff; }
 
 /* A RegisterUi that throws, or a script with no build, says so under its own section rather than
    leaving an empty one. */
 .problem {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 9px;
   margin-top: 4px;
-  padding: 7px 9px;
-  background: #2a1f1e;
+  padding: 8px 10px;
+  background: linear-gradient(90deg, rgba(192, 36, 20, 0.18), rgba(192, 36, 20, 0.06));
+  border: 1px solid rgba(192, 36, 20, 0.35);
   border-left: 2px solid #c02414;
-  border-radius: 0 2px 2px 0;
+  border-radius: 4px;
   font-size: 11px;
-  color: #d8b9b3;
+  color: #e4beb6;
   line-height: 1.45;
 }
 
-.problem svg { width: 13px; height: 13px; flex: none; margin-top: 1px; color: #e5705c; }
+.problem svg { width: 13px; height: 13px; flex: none; margin-top: 1px; color: #f08a74; }
