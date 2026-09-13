@@ -9,8 +9,8 @@ using PillScript.Scripting;
 namespace PillScript.Panel
 {
     /// <summary>
-    /// Gathers what the panel should show: every published component on the canvas, its controls
-    /// as ui.json declares them, and the values they currently hold. The panel draws it; nothing
+    /// Gathers what the panel should show: every published component on the canvas, the controls
+    /// its RegisterUi declares, and the values they currently hold. The panel draws it; nothing
     /// here knows how.
     /// </summary>
     internal static class UiPublication

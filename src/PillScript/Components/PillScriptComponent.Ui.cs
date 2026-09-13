@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Threading;
+using PillScript.Panel;
 using PillScript.Scripting;
 
 namespace PillScript.Components
@@ -70,6 +71,10 @@ namespace PillScript.Components
             RecordUndoEvent("Publish to panel");
             IsPublished = published;
 
+            // Opened before the panel is told to redraw, so the first publication of a session
+            // shows the controls rather than an empty tab somebody has to find first.
+            if (published) UiPanelHost.Show();
+
             AnnouncePublished();
         }
 
@@ -100,9 +105,9 @@ namespace PillScript.Components
         // ----- what is kept in the document ------------------------------------------------------
 
         /// <summary>
-        /// Only what has actually been set is written. The defaults live in ui.json, so writing
-        /// them here as well would mean a file that quietly disagrees with itself once somebody
-        /// edits the schema.
+        /// Only what the panel has been set to is written. What a control starts at comes from
+        /// RegisterUi, so writing that here as well would leave the document holding a number the
+        /// script has since changed its mind about, with no way to tell which of the two was meant.
         /// </summary>
         void WriteUi(GH_IO.Serialization.GH_IWriter writer)
         {

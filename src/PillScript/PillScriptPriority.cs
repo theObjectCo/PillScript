@@ -9,6 +9,10 @@ namespace PillScript
     /// without anybody opening an editor first. Nothing listens unless PILLSCRIPT_BRIDGE is set
     /// to on: the editor needs no port, and one that writes and runs code is not something to
     /// hand to somebody who only installed a script component.
+    ///
+    /// The Rhino panel is registered here too, and for the opposite reason: Rhino wants to know
+    /// about a panel before anybody asks for one, so that a document reopened with a published
+    /// component finds the tab already there.
     /// </summary>
     public class PillScriptPriority : GH_AssemblyPriority
     {
@@ -24,7 +28,10 @@ namespace PillScript
             return GH_LoadingInstruction.Proceed;
         }
 
-        /// <summary>Spike. Failing to register a panel is not a reason to fail to load.</summary>
+        /// <summary>
+        /// Failing to register the panel is not a reason to fail to load: a component that cannot
+        /// publish its controls is still a component that compiles and runs.
+        /// </summary>
         static void RegisterPanel()
         {
             try

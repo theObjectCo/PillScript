@@ -49,6 +49,24 @@ namespace PillScript.Panel
         public static Guid PanelId => typeof(UiPanelHost).GUID;
 
         /// <summary>
+        /// Brings the panel up. Publishing a component otherwise looks like nothing happening:
+        /// the panel is registered from the moment Grasshopper loads, but it sits collapsed in
+        /// whichever group of tabs Rhino put it in, and somebody who has never opened it has no
+        /// reason to know where to look. Rhino leaves one that is already open where it is.
+        /// </summary>
+        public static void Show()
+        {
+            try
+            {
+                Rhino.UI.Panels.OpenPanel(PanelId, true);
+            }
+            catch (Exception exception)
+            {
+                Rhino.RhinoApp.WriteLine("PillScript panel: " + exception.Message);
+            }
+        }
+
+        /// <summary>
         /// Eto.Wpf carries the bridge from a WPF element to an Eto control, and Rhino has it
         /// loaded. It is reached by reflection rather than by reference on purpose: the plugin
         /// must bind to whichever Eto the running Rhino ships, and compiling against a version
