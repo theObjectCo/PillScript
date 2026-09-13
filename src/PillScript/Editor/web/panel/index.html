@@ -10,8 +10,8 @@
 <div id="sections"></div>
 
 <script>
-  // Spike. It renders the widget schema a component publishes and reports every change back.
-  // What it proves: the panel docks, the page runs inside it, and values cross both ways.
+  // Draws what the published components declare, and reports every change back. The host owns
+  // when a change becomes a solve; this only says what was touched.
   (function () {
     'use strict';
 
@@ -98,6 +98,10 @@
         return row;
       },
 
+      text: function (w) {
+        return el('div', 'caption', w.label || '');
+      },
+
       button: function (w, component) {
         var row = el('div', 'widget');
         var button = el('button', 'action', w.label || w.name);
@@ -108,8 +112,12 @@
       }
     };
 
-    function render(published) {
+    function render(published, problems) {
       sections.innerHTML = '';
+
+      (problems || []).forEach(function (problem) {
+        sections.appendChild(el('div', 'problem', problem));
+      });
 
       if (!published || !published.length) {
         sections.appendChild(el('div', 'none', 'Nothing published. A script component offers ' +
@@ -149,7 +157,7 @@
 
       // Last sheet in the document, so the author's rules win without needing !important.
       author.textContent = event.data.css || '';
-      render(event.data.sections);
+      render(event.data.sections, event.data.problems);
     });
 
     host.postMessage({ type: 'ready' });

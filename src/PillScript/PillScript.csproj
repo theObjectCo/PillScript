@@ -31,6 +31,16 @@
     </None>
   </ItemGroup>
 
+  <!--
+    The panel's icon has to be embedded rather than loaded from a path. Loading one from a file
+    works in a debug build and fails silently in a release one, which is a well worn trap in the
+    Rhino forums; LogicalName is fixed here so the resource is named the same whatever the folder
+    layout does.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="panel.ico" LogicalName="PillScript.panel.ico" />
+  </ItemGroup>
+
   <!-- What Yak reads when the build output is turned into a package. -->
   <ItemGroup>
     <None Include="manifest.yml" CopyToOutputDirectory="PreserveNewest" />

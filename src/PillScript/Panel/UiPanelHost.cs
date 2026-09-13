@@ -4,17 +4,17 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Eto.Drawing;
 using Eto.Forms;
+using Grasshopper;
+using PillScript.Components;
 using Microsoft.Web.WebView2.Core;
 
 namespace PillScript.Panel
 {
     /// <summary>
-    /// A spike, not a feature. What it has settled so far: a .gha can register a panel by
-    /// borrowing Grasshopper's own PlugIn; Rhino 8 will not construct a Windows Forms control
-    /// given to RegisterPanel, though it reports success; an Eto control works and docks.
-    ///
-    /// What it is settling now: whether WebView2 can live inside that Eto control, which is the
-    /// last thing in the way of rendering the panel as a page.
+    /// The Rhino panel a script publishes its controls into. It is an Eto panel because that is
+    /// what Rhino 8 will construct: a Windows Forms control handed to RegisterPanel is accepted
+    /// and then quietly never built. Inside it there is nothing but a web view, so every control
+    /// a script declares is an HTML element and a script can restyle the lot with a ui.css.
     ///
     /// The GUID is the panel's identity to Rhino, so it is fixed rather than generated.
     /// </summary>
@@ -22,6 +22,12 @@ namespace PillScript.Panel
     public class UiPanelHost : Eto.Forms.Panel
     {
         const string VirtualHost = "pillscript.panel";
+
+        static readonly System.Text.Json.JsonSerializerOptions Json =
+            new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
 
         readonly Microsoft.Web.WebView2.Wpf.WebView2 _web = new Microsoft.Web.WebView2.Wpf.WebView2();
 
@@ -44,8 +50,9 @@ namespace PillScript.Panel
 
         /// <summary>
         /// Eto.Wpf carries the bridge from a WPF element to an Eto control, and Rhino has it
-        /// loaded. It is reached by reflection here so the spike settles the question without
-        /// first settling which package to reference it by.
+        /// loaded. It is reached by reflection rather than by reference on purpose: the plugin
+        /// must bind to whichever Eto the running Rhino ships, and compiling against a version
+        /// from elsewhere is how that goes wrong.
         /// </summary>
         static Control Wrap(System.Windows.FrameworkElement element)
         {
@@ -92,13 +99,30 @@ namespace PillScript.Panel
 
                 page.Navigate("https://" + VirtualHost + "/index.html");
 
-                Rhino.RhinoApp.WriteLine("PillScript panel: WebView2 is up inside the Eto panel.");
+                PillScriptComponent.Published += Refresh;
+                Instances.ActiveCanvas.DocumentChanged += OnDocumentChanged;
             }
             catch (Exception exception)
             {
                 // A panel that throws while Rhino is docking it takes Rhino with it.
                 Rhino.RhinoApp.WriteLine("PillScript panel: " + exception.Message);
             }
+        }
+
+        void OnDocumentChanged(object sender, Grasshopper.GUI.Canvas.GH_CanvasDocumentChangedEventArgs e)
+            => Refresh();
+
+        /// <summary>
+        /// Redraws the panel. It arrives from a component's menu or from a document being opened,
+        /// both of which happen on the UI thread, but the check costs nothing and a panel that
+        /// throws takes Rhino with it.
+        /// </summary>
+        void Refresh()
+        {
+            if (_web.CoreWebView2 == null) return;
+
+            try { Publish(); }
+            catch (Exception exception) { Rhino.RhinoApp.WriteLine("PillScript panel: " + exception.Message); }
         }
 
         void OnMessage(object sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -119,40 +143,50 @@ namespace PillScript.Panel
             }
         }
 
-        /// <summary>Stands in for reading ui.json off every component that has been published.</summary>
+        /// <summary>Sends what the published components currently declare and hold.</summary>
         void Publish()
         {
-            var document = Grasshopper.Instances.ActiveCanvas?.Document;
-            var title = document?.DisplayName ?? "no definition open";
+            if (_web.CoreWebView2 == null) return;
 
-            var payload = @"{
-              ""type"": ""published"",
-              ""css"": "".section > h2 { color: #d18616; }"",
-              ""sections"": [
-                {
-                  ""component"": ""spike"",
-                  ""title"": ""SPIKE, IN " + title + @""",
-                  ""widgets"": [
-                    { ""kind"": ""slider"", ""name"": ""radius"", ""minimum"": 1, ""maximum"": 50, ""value"": 10 },
-                    { ""kind"": ""number"", ""name"": ""count"", ""value"": 12 },
-                    { ""kind"": ""choice"", ""name"": ""style"", ""options"": [""round"", ""square""], ""value"": ""round"" },
-                    { ""kind"": ""toggle"", ""name"": ""cap"", ""value"": true },
-                    { ""kind"": ""button"", ""name"": ""bake"", ""label"": ""Bake"" }
-                  ]
-                }
-              ]
-            }";
-
-            _web.CoreWebView2.PostWebMessageAsJson(payload);
+            try
+            {
+                _web.CoreWebView2.PostWebMessageAsJson(
+                    System.Text.Json.JsonSerializer.Serialize(UiPublication.Payload(), Json));
+            }
+            catch (Exception exception)
+            {
+                Rhino.RhinoApp.WriteLine("PillScript panel: " + exception.Message);
+            }
         }
 
-        /// <summary>Where a real panel would write the value onto the component and expire it.</summary>
+        /// <summary>
+        /// Puts a value onto the component it belongs to. The component decides when that becomes
+        /// a solve, so a slider being dragged does not solve forty times on the way.
+        /// </summary>
         static void Heard(System.Text.Json.JsonElement root)
         {
-            var name = root.TryGetProperty("name", out var n) ? n.GetString() : "?";
-            var value = root.TryGetProperty("value", out var v) ? v.ToString() : "?";
+            var component = UiPublication.Find(
+                root.TryGetProperty("component", out var id) ? id.GetString() : null);
 
-            Rhino.RhinoApp.WriteLine("PillScript panel: " + name + " = " + value);
+            if (component == null) return;
+
+            var name = root.TryGetProperty("name", out var n) ? n.GetString() : null;
+            if (name == null) return;
+
+            component.SetUiValue(name, Plain(root.TryGetProperty("value", out var v) ? v : default));
+        }
+
+        /// <summary>A JSON value as the plainest CLR type that carries it.</summary>
+        static object Plain(System.Text.Json.JsonElement value)
+        {
+            switch (value.ValueKind)
+            {
+                case System.Text.Json.JsonValueKind.Number: return value.GetDouble();
+                case System.Text.Json.JsonValueKind.True: return true;
+                case System.Text.Json.JsonValueKind.False: return false;
+                case System.Text.Json.JsonValueKind.String: return value.GetString();
+                default: return null;
+            }
         }
     }
 }

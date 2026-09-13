@@ -159,6 +159,47 @@ The trap is that a field collecting something grows on every iteration, not ever
 nothing empties it until the next compile. `Iteration == 0` is the moment to clear it if what you
 want is one solve's worth.
 
+## Controls in the Rhino panel
+
+A script can put controls in a Rhino panel, docked beside Layers and Properties. Override
+`RegisterUi` and register them. Each call does two things at once: it tells the panel what to
+draw, and it writes what that control currently holds into the variable you hand it.
+
+```csharp
+double radius;
+int sides;
+string style;
+bool bake;
+
+public override void RegisterUi(UiRegistrar register)
+{
+    register.Text(""Outline"");
+    register.Slider(""radius"", 1, 50, 12, out radius);
+    register.Whole(""sides"", 6, out sides, label: ""corners"");
+    register.Choice(""style"", new[] { ""polygon"", ""circle"" }, out style);
+    register.Button(""bake"", out bake, label: ""Bake to Rhino"");
+}
+```
+
+`RegisterUi` runs before every solve, so by the time `RunScript` reads `radius` it holds what the
+panel holds. Nothing is looked up by name at the point of use.
+
+Then turn on **Publish to panel** in the component's menu. The panel stacks a section for every
+published component, so several scripts can share it.
+
+The controls are: `Slider` for a number with bounds, `Number` and `Whole` for one typed in,
+`Toggle` for a switch, `Choice` for one of a list, `Button` for something to press, and `Text` for
+a heading. `Choice` takes any list, so the options can be worked out rather than written down.
+
+A `Button` is true for the one solve its press caused and false on every other, so acting on it
+needs no memory of whether you already did.
+
+Values are kept in the Grasshopper document, so they survive saving and reopening. Compiling does
+not clear them; a control that disappears from `RegisterUi` takes its value with it.
+
+The panel is a web page, and a `ui.css` in this folder is appended after its own stylesheet, so
+any rule in there wins. The sections carry class names like `.section`, `.widget` and `.caption`.
+
 ## What ScriptBase gives you
 
 - `Print(...)` writes to the output pane and to the component's `out` parameter

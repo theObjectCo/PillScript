@@ -32,7 +32,12 @@ namespace PillScript
                 var host = Rhino.PlugIns.PlugIn.Find(GrasshopperPlugin);
                 if (host == null) return;
 
-                Rhino.UI.Panels.RegisterPanel(host, typeof(Panel.UiPanelHost), "PillScript", null);
+                // From the assembly rather than from a file: an icon read off disk registers in a
+                // debug build and quietly does not in a release one.
+                var icon = Rhino.UI.DrawingUtilities.IconFromResource(
+                    "PillScript.panel.ico", typeof(PillScriptPriority).Assembly);
+
+                Rhino.UI.Panels.RegisterPanel(host, typeof(Panel.UiPanelHost), "PillScript", icon);
             }
             catch (Exception exception)
             {

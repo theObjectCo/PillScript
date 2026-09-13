@@ -116,6 +116,10 @@ namespace PillScript.Components
 
             ParameterLayout.Apply(this, _compiled.Signature, FixedOutputs);
             ClearRuntimeMessages();
+
+            // The controls come out of the build, so a new build may be a different panel.
+            if (IsPublished) AnnouncePublished();
+
             ExpireSolution(true);
         }
 

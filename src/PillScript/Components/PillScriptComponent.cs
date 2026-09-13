@@ -93,10 +93,11 @@ namespace PillScript.Components
             }
 
             var lines = new List<string>();
+            var registrar = new UiRegistrar(UiHeld);
 
             try
             {
-                ScriptRunner.Run(_compiled, DA, this, DA.Iteration, FixedOutputs, lines.Add);
+                ScriptRunner.Run(_compiled, DA, this, DA.Iteration, FixedOutputs, registrar, lines.Add);
             }
             catch (Exception exception)
             {
@@ -108,6 +109,10 @@ namespace PillScript.Components
 
             DA.SetDataList(0, lines);
             Report(lines);
+
+            // A press lasts one solve. Cleared on the last iteration, so every iteration of the
+            // same solve sees it.
+            ReleaseButtons(registrar);
         }
 
         /// <summary>
@@ -155,11 +160,14 @@ namespace PillScript.Components
         {
             base.AddedToDocument(document);
 
+            if (IsPublished) AnnouncePublished();
             if (CompileOnLoad && _compiled == null) Compile();
         }
 
         public override void RemovedFromDocument(GH_Document document)
         {
+            AnnouncePublished();
+
             _watcher.Dispose();
             Language.Dispose();
 
@@ -188,6 +196,13 @@ namespace PillScript.Components
                 CompileOnLoad = !CompileOnLoad;
             }, true, CompileOnLoad);
 
+            var declared = Register().Controls.Count > 0;
+
+            Menu_AppendItem(menu, "Publish to panel", (_, __) => SetPublished(!IsPublished),
+                declared, IsPublished).ToolTipText = declared
+                ? "Show this script's controls in the Rhino panel."
+                : "Override RegisterUi in the script to give it controls, then compile.";
+
             Menu_AppendItem(menu, "Open project folder", (_, __) =>
             {
                 _watcher.Mirror();
@@ -201,6 +216,9 @@ namespace PillScript.Components
         {
             writer.SetGuid("ProjectId", Project.Id);
             writer.SetBoolean("CompileOnLoad", CompileOnLoad);
+            writer.SetBoolean("Published", IsPublished);
+
+            WriteUi(writer);
             writer.SetInt32("FileCount", Project.Files.Count);
 
             for (var i = 0; i < Project.Files.Count; i++)
@@ -218,6 +236,11 @@ namespace PillScript.Components
 
             if (reader.ItemExists("CompileOnLoad"))
                 CompileOnLoad = reader.GetBoolean("CompileOnLoad");
+
+            if (reader.ItemExists("Published"))
+                IsPublished = reader.GetBoolean("Published");
+
+            ReadUi(reader);
 
             var files = new List<ScriptFile>();
             var count = reader.ItemExists("FileCount") ? reader.GetInt32("FileCount") : 0;

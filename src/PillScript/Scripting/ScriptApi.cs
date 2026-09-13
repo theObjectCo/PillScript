@@ -16,6 +16,14 @@ namespace PillScript
         /// <summary>Zero based index of the current solve iteration.</summary>
         public int Iteration { get; internal set; }
 
+        /// <summary>
+        /// Registers the controls this script wants in the Rhino panel, and receives what they
+        /// are currently set to. Override it, call the registrar, and turn Publish to panel on in
+        /// the component's menu. It runs before every solve, so the variables it writes into hold
+        /// what the panel holds.
+        /// </summary>
+        public virtual void RegisterUi(UiRegistrar register) { }
+
         /// <summary>The Rhino document the Grasshopper document belongs to.</summary>
         public Rhino.RhinoDoc RhinoDocument { get; internal set; }
 
@@ -25,7 +33,15 @@ namespace PillScript
         public void Print(object value) => PrintSink?.Invoke(value?.ToString() ?? "null");
 
         /// <summary>Writes a formatted line to the component's output panel.</summary>
-        public void Print(string format, params object[] args) => PrintSink?.Invoke(string.Format(format, args));
+        /// <summary>
+        /// With arguments this formats; without any it prints the string as it stands. Without
+        /// that check a line holding a brace, which any bit of JSON does, throws instead of
+        /// printing.
+        /// </summary>
+        public void Print(string format, params object[] args)
+            => PrintSink?.Invoke(args == null || args.Length == 0
+                ? format
+                : string.Format(format, args));
 
         /// <summary>Adds a remark bubble to the component.</summary>
         public void Remark(string message) => AddMessage(GH_RuntimeMessageLevel.Remark, message);
