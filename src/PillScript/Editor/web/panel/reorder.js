@@ -47,10 +47,15 @@
       var head = event.target.closest && event.target.closest('.head');
       if (!head || event.button !== 0) return;
 
+      // A drag whose click never landed would otherwise leave this set and swallow the next one.
+      delete sections.dataset.dragged;
+
       carried = head.parentElement;
       from = event.clientY;
       moved = false;
-      sections.setPointerCapture(event.pointerId);
+
+      // Not captured yet: capturing here would retarget the click that follows to this element,
+      // and the heading would never hear the press that was only meant to roll it up.
     });
 
     sections.addEventListener('pointermove', function (event) {
@@ -62,6 +67,10 @@
       if (!moved) {
         moved = true;
         carried.classList.add('carried');
+
+        // Capture keeps the drag alive past the edges of the list. Without it the drag still
+        // works while the pointer stays inside, so a refusal is not worth giving up for.
+        try { sections.setPointerCapture(event.pointerId); } catch (ignored) { }
       }
 
       settle(event.clientY);
@@ -70,7 +79,8 @@
     sections.addEventListener('pointerup', function (event) {
       if (!carried) return;
 
-      sections.releasePointerCapture(event.pointerId);
+      if (sections.hasPointerCapture(event.pointerId)) sections.releasePointerCapture(event.pointerId);
+
       carried.classList.remove('carried');
       carried = null;
 
