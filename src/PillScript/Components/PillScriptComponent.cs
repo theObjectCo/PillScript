@@ -46,9 +46,15 @@ namespace PillScript.Components
                    "Maths", "Script")
         {
             _watcher = new ProjectWatcher(Project, OnProjectPulled);
+            _givenNickName = NickName;
 
             Language.Invalidate(Project);
         }
+
+        readonly string _givenNickName;
+
+        /// <summary>Whether the nickname is still the one every component of this kind starts with.</summary>
+        internal bool IsNamed => NickName != _givenNickName;
 
         public override Guid ComponentGuid => new Guid("7F4C0F1B-9E51-4A3E-9B1D-6C1A2E3D4F50");
 

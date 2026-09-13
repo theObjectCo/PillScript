@@ -106,6 +106,7 @@ namespace PillScript.Bridge
 
             component.Project.SetContent(file.Name, BridgeLookup.Text(arguments, "content"));
 
+            component.NoteSaved(file.Name);
             component.AfterProjectChanged();
             return new { ok = true, file = file.Name };
         }

@@ -158,7 +158,7 @@ namespace PillScript.Panel
                     case "set": Heard(root); break;
                     case "collapse": Collapse(root); break;
                     case "colour": Pick(root); break;
-                    case "close": Rhino.UI.Panels.ClosePanel(PanelId); break;
+                    case "order": Sort(root); break;
                 }
             }
             catch (Exception exception)
@@ -218,6 +218,20 @@ namespace PillScript.Panel
 
             if (Rhino.UI.Dialogs.ShowColorDialog(ref colour))
                 component.SetUiValue(name, UiRegistrar.WriteColour(colour));
+        }
+
+        /// <summary>
+        /// Takes the order the sections were dragged into. The page sends the whole list rather
+        /// than what moved, so the two ends cannot drift apart over a run of drags.
+        /// </summary>
+        static void Sort(System.Text.Json.JsonElement root)
+        {
+            if (!root.TryGetProperty("components", out var list) ||
+                list.ValueKind != System.Text.Json.JsonValueKind.Array) return;
+
+            var index = 0;
+            foreach (var id in list.EnumerateArray())
+                UiPublication.Find(id.GetString())?.SetOrder(index++);
         }
 
         /// <summary>Rolls a section up or down, and keeps it that way in the document.</summary>

@@ -42,6 +42,15 @@ namespace PillScript.Components
             AnnouncePublished();
         }
 
+        /// <summary>
+        /// Where this section sits in the panel. Scripts land on the canvas in the order they were
+        /// written, which has little to do with the order they want to be read in, so the panel
+        /// keeps an order of its own. Unset means fall in behind those that have one.
+        /// </summary>
+        internal int UiOrder { get; private set; } = int.MaxValue;
+
+        internal void SetOrder(int order) => UiOrder = order;
+
         /// <summary>How long the last solve took, in milliseconds, and whether it went through.</summary>
         internal double LastSolveMs { get; private set; }
 
@@ -146,6 +155,8 @@ namespace PillScript.Components
         void WriteUi(GH_IO.Serialization.GH_IWriter writer)
         {
             writer.SetBoolean("UiCollapsed", IsCollapsed);
+            if (UiOrder != int.MaxValue) writer.SetInt32("UiOrder", UiOrder);
+
             writer.SetInt32("UiCount", _ui.Count);
 
             var index = 0;
@@ -182,6 +193,7 @@ namespace PillScript.Components
             _ui.Clear();
 
             if (reader.ItemExists("UiCollapsed")) IsCollapsed = reader.GetBoolean("UiCollapsed");
+            if (reader.ItemExists("UiOrder")) UiOrder = reader.GetInt32("UiOrder");
 
             var count = reader.ItemExists("UiCount") ? reader.GetInt32("UiCount") : 0;
 
@@ -201,6 +213,17 @@ namespace PillScript.Components
 
         /// <summary>The file a script may carry to restyle the panel.</summary>
         internal const string StyleFile = "ui.css";
+
+        /// <summary>
+        /// A saved ui.css reaches the panel at once. Styling is the one thing here that needs
+        /// neither a compile nor a solve, and waiting for one to see a colour change is no way to
+        /// write a stylesheet.
+        /// </summary>
+        internal void NoteSaved(string file)
+        {
+            if (IsPublished && string.Equals(file, StyleFile, StringComparison.OrdinalIgnoreCase))
+                AnnouncePublished();
+        }
 
         /// <summary>Everything the panel needs to draw this component, in one read.</summary>
         internal (UiRegistrar Ui, string Problem, string Style) Publication()

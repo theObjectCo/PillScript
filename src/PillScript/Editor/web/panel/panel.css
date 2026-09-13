@@ -114,6 +114,10 @@ body { display: flex; flex-direction: column; }
 }
 
 .head:hover { background: var(--groupLit); }
+
+/* While a section is being dragged into place among the others. */
+.section.carried { opacity: 0.75; }
+.section.carried .head { background: var(--groupLit); cursor: grabbing; }
 .head .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .head .chevron {

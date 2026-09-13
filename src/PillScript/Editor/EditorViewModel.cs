@@ -47,6 +47,7 @@ namespace PillScript.Editor
             Project.SetContent(name, content);
             Language.Update(name, content);
 
+            _component.NoteSaved(name);
             _component.OnDisplayExpired(true);
             _channel.RefreshState();
         }

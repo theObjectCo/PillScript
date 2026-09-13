@@ -80,6 +80,12 @@
 
     var bar = head(section);
     bar.onclick = function () {
+      // The heading is also what a section is dragged by, so a press that moved is not a click.
+      if (sections.dataset.dragged) {
+        delete sections.dataset.dragged;
+        return;
+      }
+
       var shut = !block.classList.contains('shut');
       block.classList.toggle('shut', shut);
       state.shut[section.component] = shut;
@@ -195,7 +201,7 @@
     chrome(payload);
   }
 
-  document.getElementById('dismiss').onclick = function () { say({ type: 'close' }); };
+  SP.reorder(sections, say);
 
   // Rolls everything up, unless everything is up already, in which case it rolls it back down.
   document.getElementById('fold').onclick = function () {
@@ -214,23 +220,31 @@
   if (!host) {
     // Opened in a browser, for work on the page itself.
     arrived({
-      count: 1, document: 'sample.gh', status: { milliseconds: 14, failed: false },
+      count: 2, document: 'sample.gh', status: { milliseconds: 14, failed: false },
       layers: ['Default', 'Default::Solids'],
-      sections: [{
-        component: 'sample', title: 'Outline', mark: '1A5C', widgets: [
-          { kind: 'caption', label: 'Outline' },
-          { kind: 'slider', name: 'radius', minimum: 1, maximum: 50, value: 12 },
-          { kind: 'number', name: 'sides', label: 'corners', step: 1, value: 6 },
-          { kind: 'choice', name: 'style', options: ['polygon', 'circle', 'rect'], value: 'polygon' },
-          { kind: 'text', name: 'name', value: 'outline_a' },
-          { kind: 'vector', name: 'direction', value: { x: 0, y: 0, z: 1 } },
-          { kind: 'colour', name: 'paint', value: '#C9A227' },
-          { kind: 'layer', name: 'layer', value: 'Default::Solids' },
-          { kind: 'toggle', name: 'capped', value: true, note: 'close both ends' },
-          { kind: 'button', name: 'bake', label: 'Bake to Rhino' },
-          { kind: 'button', name: 'reset', label: 'Reset', quiet: true }
-        ]
-      }]
+      sections: [
+        {
+          component: 'sample-a', title: 'Outline', mark: '1A5C', widgets: [
+            { kind: 'slider', name: 'radius', minimum: 1, maximum: 50, value: 12 },
+            { kind: 'number', name: 'corners', step: 1, value: 6 },
+            { kind: 'choice', name: 'style', options: ['polygon', 'circle', 'rect'], value: 'polygon' },
+            { kind: 'text', name: 'name', value: 'outline_a' },
+            { kind: 'button', name: 'bake', label: 'Bake to Rhino' },
+            { kind: 'button', name: 'reset', label: 'Reset', quiet: true }
+          ]
+        },
+        {
+          component: 'sample-b', title: 'Extrusion', mark: 'FC5D',
+          problem: 'height exceeds layer clipping — geometry will be trimmed on bake',
+          widgets: [
+            { kind: 'slider', name: 'height', minimum: 0, maximum: 100, value: 93.32 },
+            { kind: 'toggle', name: 'capped', value: false, note: 'close both ends' },
+            { kind: 'vector', name: 'direction', value: { x: 0, y: 0, z: 1 } },
+            { kind: 'colour', name: 'material', value: '#C9A227' },
+            { kind: 'layer', name: 'layer', value: 'Default::Solids' }
+          ]
+        }
+      ]
     });
     return;
   }

@@ -16,8 +16,9 @@ namespace PillScript.Panel
     internal static class UiPublication
     {
         /// <summary>
-        /// Published components on the active canvas, in the order the document holds them, which
-        /// is stable enough that sections do not jump about between refreshes.
+        /// Published components on the active canvas, in the order the panel was left in. One that
+        /// has never been dragged has no order of its own and falls in behind those that have, in
+        /// the order the document holds them.
         /// </summary>
         public static List<PillScriptComponent> Published()
         {
@@ -31,7 +32,12 @@ namespace PillScript.Panel
                 if (obj is PillScriptComponent component && component.IsPublished) found.Add(component);
             }
 
-            return found;
+            return found
+                .Select((component, index) => new { component, index })
+                .OrderBy(pair => pair.component.UiOrder)
+                .ThenBy(pair => pair.index)
+                .Select(pair => pair.component)
+                .ToList();
         }
 
         public static PillScriptComponent Find(string id)
@@ -60,14 +66,24 @@ namespace PillScript.Panel
                 if (!string.IsNullOrWhiteSpace(style)) styles.Add(style);
                 if (registrar.Controls.Any(c => c.Kind == "layer")) wantsLayers = true;
 
+                var controls = registrar.Controls;
+
+                // A script that opens with a caption has named itself, and a heading saying C#
+                // over a line saying Outline says it twice. Renaming the component on the canvas
+                // takes the heading back, and the caption stays where it was written.
+                var lead = !component.IsNamed && controls.Count > 0 && controls[0].Kind == "caption"
+                    ? controls[0]
+                    : null;
+
                 sections.Add(new
                 {
                     component = component.InstanceGuid.ToString(),
-                    title = Title(component),
+                    title = lead != null ? lead.Label : Title(component),
                     mark = Mark(component),
                     collapsed = component.IsCollapsed,
                     problem,
-                    widgets = registrar.Controls.Select(control => Describe(control, component.UiHeld))
+                    widgets = controls.Skip(lead == null ? 0 : 1)
+                        .Select(control => Describe(control, component.UiHeld))
                 });
             }
 
