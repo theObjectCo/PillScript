@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Drawing in the viewport
+
+A script can override `DrawWires` and `DrawMeshes` to draw into the Rhino viewport, and `DrawBounds`
+to say what the drawing covers so that Zoom Extents and the clipping planes account for it. Output
+geometry is still previewed as before; these run after it.
+
+Grasshopper decides whether to run the viewport passes from the outputs, so a script that draws
+without producing geometry would never have been asked. Overriding either method now counts as being
+preview capable.
+
+An exception thrown while drawing cannot be allowed back into the display pipeline. It is caught,
+reported once on the Rhino command line, and the script is left out of the passes until the next
+compile.
+
+
 ## 0.3.0
 
 First public release.

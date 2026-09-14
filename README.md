@@ -8,6 +8,7 @@ PillScript is a C# script component for Grasshopper in Rhino 8. What it adds ove
 - inputs and outputs read from the `RunScript` signature
 - breakpoints that stop the solve and show the locals
 - controls that a script can put in a Rhino panel
+- drawing straight into the Rhino viewport
 
 The editor window is laid out and coloured after Visual Studio Code's Dark Modern: a title bar the
 page draws itself, a rail of layout toggles, a sidebar of files and parameters, a toolbar, a panel
@@ -103,8 +104,8 @@ because the build needs it.
 
 `List<T>` gives a list input, `GH_Structure<T>` or `DataTree<T>` gives a tree, anything else is an
 item. `[Description]`, `[Name]`, `[Default]` and `[Optional]` adjust the parameter. Deriving from
-`ScriptBase` is optional and adds `Print`, `Remark`, `Warning`, `Error`, `Component`, `Iteration`
-and `RhinoDocument`.
+`ScriptBase` is optional and adds `Print`, `Remark`, `Warning`, `Error`, `Component`, `Iteration`,
+`RhinoDocument` and the viewport drawing hooks.
 
 The parameter list is rebuilt after each successful compile. Wires survive as long as the parameter
 keeps its name, its type and its access.
@@ -201,6 +202,45 @@ The panel holds a web view and nothing else, so every control is an HTML element
 carries a `ui.css` restyles them: the file is appended after the default stylesheet, so its rules
 win by cascade order. That styling is not scoped to the section it came from. One script's `ui.css`
 restyles the whole panel, including the sections other components published.
+
+## Drawing in the viewport
+
+Geometry that leaves an output is previewed by Grasshopper as it is for any component. A script
+that wants to draw something it does not output overrides `DrawWires`, and gets the display
+pipeline:
+
+```csharp
+public class Script : ScriptBase
+{
+    Point3d[] corners = Array.Empty<Point3d>();
+
+    public void RunScript(Curve curve, out double length)
+    {
+        length = curve.GetLength();
+        corners = curve.DuplicateSegments().Select(s => s.PointAtStart).ToArray();
+    }
+
+    public override void DrawWires(IGH_PreviewArgs args)
+    {
+        foreach (var corner in corners)
+            args.Display.DrawPoint(corner, PointStyle.RoundControlPoint, 4, Color.OrangeRed);
+    }
+
+    public override BoundingBox DrawBounds => new BoundingBox(corners);
+}
+```
+
+`DrawMeshes` is the shaded pass, for anything drawn with a material. `DrawBounds` is what Zoom
+Extents and the clipping planes work from; without it the drawing is clipped away at some camera
+angles. Grasshopper asks for the box often, so it should hand back a value the solve already worked
+out.
+
+Both methods run on every redraw, which is many times per second and far more often than a solve.
+The work belongs in the solve, in a field the drawing then reads, as `corners` does above.
+
+An exception thrown while drawing cannot go back into the display pipeline, so it is caught. The
+reason is printed once on the Rhino command line and the script is left out of the passes until the
+next compile.
 
 ## Component icons
 

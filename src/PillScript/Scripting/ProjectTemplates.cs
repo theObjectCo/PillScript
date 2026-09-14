@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -222,12 +222,34 @@ its `label` and, for numbers, a `.reading`. The rest are `.caption`, `.field`, `
 to one script. A `ui.css` restyles the whole panel, including the sections other components
 published.
 
+## Drawing in the viewport
+
+Geometry on an output is previewed by Grasshopper already. To draw something that is not an output,
+override `DrawWires`, and `DrawMeshes` for anything drawn with a material:
+
+```csharp
+public override void DrawWires(IGH_PreviewArgs args)
+{
+    args.Display.DrawPoint(centre, PointStyle.RoundControlPoint, 4, Color.OrangeRed);
+}
+
+public override BoundingBox DrawBounds => box;
+```
+
+`DrawBounds` is what Zoom Extents and the clipping planes work from. Without it the drawing is
+clipped away at some camera angles.
+
+Both methods run on every redraw, which is far more often than a solve, so the work belongs in
+`RunScript` and the drawing should read a field it filled in. A throw inside either one is caught,
+printed once on the Rhino command line, and stops the drawing until the next compile.
+
 ## What ScriptBase provides
 
 - `Print(...)` writes to the output pane and to the component's `out` parameter
 - `Warning(...)`, `Error(...)` and `Remark(...)` put a bubble on the component
 - `Component`, `RhinoDocument` and `Iteration` identify the component, the Rhino document and the
   current iteration
+- `DrawWires(...)`, `DrawMeshes(...)` and `DrawBounds` draw into the Rhino viewport
 
 ## More files
 

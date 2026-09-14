@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Grasshopper.Kernel;
 
 namespace PillScript
@@ -26,6 +26,27 @@ namespace PillScript
 
         /// <summary>The Rhino document the Grasshopper document belongs to.</summary>
         public Rhino.RhinoDoc RhinoDocument { get; internal set; }
+
+        /// <summary>
+        /// Draws into the Rhino viewport, in the wire pass. Override it to add anything the output
+        /// geometry does not already show: a label, a direction, a diagram. Grasshopper draws the
+        /// outputs first, and this runs after them.
+        ///
+        /// It runs on every redraw, not on every solve, so the work belongs in a field the solve
+        /// filled in. Anything thrown here is caught, reported once and stops further drawing
+        /// until the next compile, since an exception per frame would be unreadable.
+        /// </summary>
+        public virtual void DrawWires(IGH_PreviewArgs args) { }
+
+        /// <summary>The shaded pass, for meshes and breps drawn with a material.</summary>
+        public virtual void DrawMeshes(IGH_PreviewArgs args) { }
+
+        /// <summary>
+        /// What the drawing covers, so that Zoom Extents and the clipping planes account for it.
+        /// Anything drawn outside this box is clipped away at some camera angles. Grasshopper asks
+        /// for it often, so it should return a stored value and not compute one.
+        /// </summary>
+        public virtual Rhino.Geometry.BoundingBox DrawBounds => Rhino.Geometry.BoundingBox.Empty;
 
         internal Action<string> PrintSink { get; set; }
 

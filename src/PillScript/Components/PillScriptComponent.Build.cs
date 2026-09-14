@@ -109,6 +109,10 @@ namespace PillScript.Components
             _compiled?.Dispose();
             _compiled = result.Script;
 
+            // A script taken out of the viewport passes for throwing gets another chance here,
+            // since the code that threw has just been replaced.
+            ClearDrawFault();
+
             // A compile may have restored packages, so the language service is given the new
             // reference set as well.
             Language.Invalidate(Project);
