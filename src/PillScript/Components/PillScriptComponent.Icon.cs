@@ -109,7 +109,7 @@ namespace PillScript.Components
         void AppendIconItem(ToolStripDropDown menu)
         {
             Menu_AppendItem(menu, "Phosphor icon").ToolTipText =
-                "A name from phosphoricons.com, for example gear-six, flask or waves-bold. "
+                "A name from https://phosphoricons.com, for example gear-six, flask or waves-bold. "
                 + "Empty for the pill.";
 
             var box = Menu_AppendTextItem(menu, _iconName ?? string.Empty, (sender, key) =>

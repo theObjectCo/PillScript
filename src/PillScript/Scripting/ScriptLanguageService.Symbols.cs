@@ -110,7 +110,7 @@ namespace PillScript.Scripting
             }, new List<SourceEdit>());
         }
 
-        // ----- turning Roslyn's positions into the page's ----------------------------------------
+        // ----- Roslyn positions as the page reads them -------------------------------------------
 
         static List<SourceSpan> Spans(Solution solution, IEnumerable<Location> locations)
             => locations.Select(location => Span(solution, location))

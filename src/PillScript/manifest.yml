@@ -4,22 +4,25 @@ version: 0.2.0
 authors:
   - Mateusz Zwierzycki
 description: >
-  A C# script component for Grasshopper in Rhino 8, with the editor the built-in one does not have.
+  PillScript is a C# script component for Grasshopper in Rhino 8.
 
-  The editor is Monaco with Roslyn behind it: completion, hover, signature help and diagnostics
-  that come from the same reference set the build uses. Compilation happens when asked rather than
-  on every keystroke, and a component whose sources have moved past its build says so on the
-  canvas. A script is a folder of files rather than a single buffer, and that folder is a real
-  csproj an IDE can open, so NuGet packages and project references work. Inputs and outputs are
-  read out of the RunScript signature instead of being dragged on by hand. Breakpoints stop the
-  solve and show the locals, with Rhino still responsive.
+  The editor is Monaco with Roslyn behind it. Completion, hover, signature help and diagnostics use
+  the same reference set as the build, so the editor and the Compile command report the same
+  errors. Compilation runs on F5. Until then the component keeps running its last build, and a
+  coloured plate on the canvas marks it as out of date.
 
-  A script can also put controls of its own in a Rhino panel: override RegisterUi, register a
-  slider or a toggle or a button, and the same call that draws it writes what it holds into the
-  variable handed to it. Several components share the panel, and a script may carry a ui.css to
-  restyle it.
+  Each script is a folder with a csproj in it. The folder opens in Visual Studio, Rider or VS Code
+  with completion against the running Rhino, and PackageReference entries restore with the .NET
+  SDK. Inputs and outputs come from the RunScript signature, so no parameter is dragged on by hand.
+  F9 sets a breakpoint. The solve stops there and shows the locals while Rhino keeps responding.
 
-  Windows only, and it needs the WebView2 runtime, which Rhino 8 already installs.
+  A script can also register controls that appear in a Rhino panel, docked with Layers and
+  Properties. Override RegisterUi and call the registrar once per control. Each call draws one
+  control and assigns its current value to the variable passed in. Several components share the
+  panel, and a script may carry a ui.css to restyle it.
+
+  The plugin runs on Windows only, on Rhino 8.30 or newer, and needs the WebView2 runtime that
+  Rhino 8 installs for its own interface.
 email: hi@object.pl
 url: https://github.com/theObjectCo/PillScript
 icon: icon.png

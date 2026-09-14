@@ -9,7 +9,7 @@ using System.Xml.Linq;
 namespace PillScript.Icons
 {
     /// <summary>
-    /// Turns an icon's drawing into the bitmap Grasshopper draws on the canvas.
+    /// Renders an icon's drawing to the bitmap Grasshopper draws on the canvas.
     ///
     /// WPF is already loaded for the editor, and its path mini-language is the one SVG uses, so
     /// Geometry.Parse reads a d attribute unchanged. That covers the whole file: these icons are

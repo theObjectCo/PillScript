@@ -66,8 +66,8 @@ namespace PillScript.Panel
         }
 
         /// <summary>
-        /// Eto.Wpf holds the bridge from a WPF element to an Eto control, and Rhino has it loaded
-        /// already. Reflection is deliberate here: the plugin has to bind to whichever Eto the
+        /// Eto.Wpf can wrap a WPF element as an Eto control, and Rhino has it loaded already.
+        /// Reflection is deliberate here: the plugin has to bind to whichever Eto the
         /// running Rhino ships, and a compile-time reference would pin it to another version.
         /// </summary>
         static Control Wrap(System.Windows.FrameworkElement element)

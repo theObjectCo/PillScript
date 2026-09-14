@@ -33,7 +33,7 @@ namespace PillScript.Scripting
     }
 
     /// <summary>
-    /// Turns the references in the script's csproj into assembly paths. Plain DLLs come from
+    /// Resolves the references in the script's csproj to assembly paths. Plain DLLs come from
     /// their hint path, neighbouring projects are built, and NuGet packages are restored with the
     /// .NET SDK when the list has changed since the last restore.
     /// </summary>

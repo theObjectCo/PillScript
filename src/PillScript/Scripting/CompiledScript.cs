@@ -32,7 +32,7 @@ namespace PillScript.Scripting
 
         /// <summary>
         /// The single instance every call runs on. It is created once and kept, so a field on the
-        /// script survives from one solve to the next as a static would, and a field initialiser
+        /// script still holds its value in the next solve, as a static would, and a field initialiser
         /// runs once instead of on every iteration. Only a compile discards it, together with the
         /// rest of this build.
         /// </summary>

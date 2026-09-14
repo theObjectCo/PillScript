@@ -228,7 +228,7 @@ namespace PillScript.Scripting
             }
         }
 
-        /// <summary>Turns a goo into the CLR type a parameter declared, if it can.</summary>
+        /// <summary>Converts a goo to the CLR type a parameter declared, when it can.</summary>
         static bool TryUnwrap(IGH_Goo goo, Type target, out object value)
         {
             value = null;

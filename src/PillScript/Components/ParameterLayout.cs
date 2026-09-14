@@ -7,7 +7,7 @@ using PillScript.Scripting;
 namespace PillScript.Components
 {
     /// <summary>
-    /// Turns the signature a build produced into the component's parameters. It sits apart from
+    /// Converts the signature a build produced into the component's parameters. It sits apart from
     /// the component because deciding which wires survive, and whether the canvas already matches
     /// the code, is a job of its own.
     /// </summary>

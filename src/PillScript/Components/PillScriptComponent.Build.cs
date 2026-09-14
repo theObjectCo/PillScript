@@ -8,7 +8,7 @@ using PillScript.Scripting;
 namespace PillScript.Components
 {
     /// <summary>
-    /// The part of the component that turns sources into a running build: how staleness is
+    /// The part of the component that compiles sources into a running build: how staleness is
     /// detected, what compiling does to the canvas, and where the script pauses.
     /// </summary>
     public partial class PillScriptComponent

@@ -9,7 +9,7 @@ namespace PillScript.Components
 {
     /// <summary>
     /// The part of the component that serves the Rhino panel: the published flag, the values the
-    /// panel's controls hold, and the path from a changed value to the next solve.
+    /// panel's controls hold, and how a changed value reaches the next solve.
     /// </summary>
     public partial class PillScriptComponent
     {
