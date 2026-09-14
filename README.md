@@ -37,7 +37,7 @@ Rhino 8.30 or newer, Windows, 64 bit. The editor runs in WebView2, which Rhino 8
 own interface, so there is nothing else to fetch.
 
 In Rhino, run `_PackageManager`, search for PillScript, install it and restart Rhino. The download
-is about 13 MB, most of it Monaco.
+is about 13 MB, most of it Monaco. What changed in each version is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Building it yourself
 
@@ -128,8 +128,8 @@ A `static` behaves the same way, since both live as long as the build does.
 
 Two things are worth knowing before leaning on either. They belong to the component. Each component
 compiles its own assembly into its own load context, so two components running identical source keep
-separate counters. They are also discarded at the next compile, which throws
-the old build away and unloads it. Adding or removing a breakpoint has the same effect.
+separate counters. They are also discarded at the next compile, which throws the old build away
+and unloads it. Adding or removing a breakpoint has the same effect.
 
 State here survives solving and does not survive editing. The trap is the same one the built-in
 component has: a field that collects something grows on every iteration, not every solve, and
