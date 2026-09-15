@@ -37,9 +37,9 @@ several script components, that is the only way to tell which window belongs to 
 Rhino 8.30 or newer, Windows, 64 bit. The editor runs in WebView2, which Rhino 8 installs for its
 own interface, so there is nothing else to fetch.
 
-Download `pillscript-0.3.0-rh8_30-win.yak` from
-[Releases](https://github.com/theObjectCo/PillScript/releases) and put it in a folder of its own.
-Then run, with that folder as the source:
+Download the `.yak` from the
+[latest release](https://github.com/theObjectCo/PillScript/releases/latest) and put it in a folder
+of its own. Then run, with that folder as the source:
 
 ```
 "C:\Program Files\Rhino 8\System\Yak.exe" install --source C:\path\to\the\folder pillscript
