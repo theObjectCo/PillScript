@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 ### Drawing in the viewport
 
@@ -15,6 +15,11 @@ preview capable.
 An exception thrown while drawing cannot be allowed back into the display pipeline. It is caught,
 reported once on the Rhino command line, and the script is left out of the passes until the next
 compile.
+
+Verified on an installed package: a component whose only outputs are a number and the print text
+draws a ring of points and the polygon through them, Zoom Extents frames the drawing with nothing
+else in the Rhino document, a deliberate throw inside `DrawWires` leaves Rhino running and prints
+one line naming the file and the line, and the next compile brings the drawing back.
 
 
 ## 0.3.0

@@ -225,7 +225,9 @@ published.
 ## Drawing in the viewport
 
 Geometry on an output is previewed by Grasshopper already. To draw something that is not an output,
-override `DrawWires`, and `DrawMeshes` for anything drawn with a material:
+override `DrawWires`, and `DrawMeshes` for anything drawn with a material. `PointStyle` and
+`Color` need `using Rhino.Display;` and `using System.Drawing;`, which are not in
+`GlobalUsings.cs`:
 
 ```csharp
 public override void DrawWires(IGH_PreviewArgs args)

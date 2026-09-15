@@ -209,7 +209,13 @@ Geometry that leaves an output is previewed by Grasshopper as it is for any comp
 that wants to draw something it does not output overrides `DrawWires`, and gets the display
 pipeline:
 
+`PointStyle` and `Color` are not in `GlobalUsings.cs`, so the two namespaces they come from are
+named here:
+
 ```csharp
+using System.Drawing;
+using Rhino.Display;
+
 public class Script : ScriptBase
 {
     Point3d[] corners = Array.Empty<Point3d>();
